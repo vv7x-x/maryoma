@@ -376,6 +376,30 @@
             .ctrl-btn .material-symbols-outlined { font-size: 1.5rem; }
             .page-scroll { padding-top: 60px; }
         }
+            /* Responsive helpers */
+            img, video { max-width: 100%; height: auto; display: block; }
+            .page-scroll { padding-left: 1rem; padding-right: 1rem; }
+            @media (max-width: 800px) {
+                header { padding: .6rem 1rem; }
+                .scene { width: 240px; height: 380px; }
+                .flip-card { width: 240px; height: 380px; }
+                .controls { gap: 1rem; }
+                .hero-hint p { padding: .5rem 1rem; font-size: .95rem; }
+                canvas#petals, #bg-canvas { display: none; }
+            }
+            @media (prefers-reduced-motion: reduce) {
+                .scene, .carousel, .flip-card, .aurora-layer, #petals { animation: none !important; transition: none !important; }
+            }
+
+            /* Lightbox styles */
+            #lightbox-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 99998; }
+            #lightbox-overlay.active { display: flex; }
+            #lightbox-overlay img { max-width: 95%; max-height: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.6); border-radius: 8px; }
+            #lightbox-overlay .lb-close, #lightbox-overlay .lb-prev, #lightbox-overlay .lb-next { position: absolute; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.06); color: var(--gold-light); padding: .6rem; border-radius: 50%; cursor: pointer; }
+            #lightbox-overlay .lb-close { top: 16px; right: 16px; }
+            #lightbox-overlay .lb-prev { left: 16px; top: 50%; transform: translateY(-50%); }
+            #lightbox-overlay .lb-next { right: 16px; top: 50%; transform: translateY(-50%); }
+            #lightbox-overlay .sr-only { position: absolute; left: -10000px; top: auto; width: 1px; height: 1px; overflow: hidden; }
     </style>
 </head>
 <body>
@@ -415,7 +439,7 @@
         <!-- Hero hint -->
         <div class="hero-hint" style="opacity:0; animation: sceneEntrance 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;">
             <div class="avatar">
-                <img src="mariam3.jpg" onerror="this.style.background='linear-gradient(135deg,#8b0a2a,#d4a851)'; this.style.opacity='.5'"/>
+                <img src="mariam3.jpg" loading="lazy" decoding="async" alt="صورة مريم - الأفاتار" onerror="this.style.background='linear-gradient(135deg,#8b0a2a,#d4a851)'; this.style.opacity='.5'"/>
             </div>
             <p style="position:relative;">اسحبي بأصبعك لتحريك الصور.. ثم انقري 🌸
                 <span class="material-symbols-outlined" style="position:absolute; top:-12px; right:-12px; color:var(--gold-light); animation: pulse 2s infinite; text-shadow: 0 0 10px var(--gold);">auto_awesome</span>
@@ -432,7 +456,7 @@
                         <div class="card-front">
                             <div class="photo-wrap">
                                 <span class="placeholder">١</span>
-                                <img src="mariam1.jpg" draggable="false" onerror="this.style.opacity='0'"/>
+                                <img src="mariam1.jpg" draggable="false" loading="lazy" decoding="async" alt="صورة مريم ١" onerror="this.style.opacity='0'"/>
                             </div>
                             <p class="card-title">أثير الذكريات <span class="material-symbols-outlined">favorite</span></p>
                             <p class="card-hint">الوجه الآخر 🌹</p>
@@ -453,7 +477,7 @@
                         <div class="card-front">
                             <div class="photo-wrap">
                                 <span class="placeholder">٢</span>
-                                <img src="mariam2.jpg" draggable="false" onerror="this.style.opacity='0'"/>
+                                <img src="mariam2.jpg" draggable="false" loading="lazy" decoding="async" alt="صورة مريم ٢" onerror="this.style.opacity='0'"/>
                             </div>
                             <p class="card-title">نبض اللحظات <span class="material-symbols-outlined">flare</span></p>
                             <p class="card-hint">الوجه الآخر 🌹</p>
@@ -474,7 +498,7 @@
                         <div class="card-front">
                             <div class="photo-wrap">
                                 <span class="placeholder">٣</span>
-                                <img src="mariam3.jpg" draggable="false" onerror="this.style.opacity='0'"/>
+                                <img src="mariam3.jpg" draggable="false" loading="lazy" decoding="async" alt="صورة مريم ٣" onerror="this.style.opacity='0'"/>
                             </div>
                             <p class="card-title">سحرٌ لا ينتهي <span class="material-symbols-outlined">stars</span></p>
                             <p class="card-hint">الوجه الآخر 🌹</p>
@@ -495,7 +519,7 @@
                         <div class="card-front">
                             <div class="photo-wrap">
                                 <span class="placeholder">٤</span>
-                                <img src="mariam4.jpg" draggable="false" onerror="this.style.opacity='0'"/>
+                                <img src="mariam4.jpg" draggable="false" loading="lazy" decoding="async" alt="صورة مريم ٤" onerror="this.style.opacity='0'"/>
                             </div>
                             <p class="card-title">عطر الأيام <span class="material-symbols-outlined">local_florist</span></p>
                             <p class="card-hint">الوجه الآخر 🌹</p>
@@ -516,7 +540,7 @@
                         <div class="card-front">
                             <div class="photo-wrap">
                                 <span class="placeholder">٥</span>
-                                <img src="mariam5.jpg" draggable="false" onerror="this.style.opacity='0'"/>
+                                <img src="mariam5.jpg" draggable="false" loading="lazy" decoding="async" alt="صورة مريم ٥" onerror="this.style.opacity='0'"/>
                             </div>
                             <p class="card-title">لحن الروح <span class="material-symbols-outlined">music_note</span></p>
                             <p class="card-hint">الوجه الآخر 🌹</p>
@@ -537,7 +561,7 @@
                         <div class="card-front">
                             <div class="photo-wrap">
                                 <span class="placeholder">٦</span>
-                                <img src="mariam6.jpg" draggable="false" onerror="this.style.opacity='0'"/>
+                                <img src="mariam6.jpg" draggable="false" loading="lazy" decoding="async" alt="صورة مريم ٦" onerror="this.style.opacity='0'"/>
                             </div>
                             <p class="card-title">همس النجوم <span class="material-symbols-outlined">bedtime</span></p>
                             <p class="card-hint">الوجه الآخر 🌹</p>
@@ -723,6 +747,57 @@
                 setTimeout(() => window.location.href = destination, 900);
             });
         }
+    </script>
+    <!-- Lightbox markup -->
+    <div id="lightbox-overlay" role="dialog" aria-hidden="true" aria-label="توسيع الصورة">
+        <button class="lb-close" aria-label="إغلاق">✕</button>
+        <button class="lb-prev" aria-label="السابق">◀</button>
+        <img id="lightbox-img" src="" alt="" />
+        <button class="lb-next" aria-label="التالي">▶</button>
+    </div>
+
+    <script>
+        // Simple lightbox for gallery
+        (function(){
+            const overlay = document.getElementById('lightbox-overlay');
+            const lbImg = document.getElementById('lightbox-img');
+            const imgs = Array.from(document.querySelectorAll('.photo-wrap img'));
+            let idx = -1;
+
+            function open(i){
+                const el = imgs[i];
+                if(!el) return;
+                idx = i;
+                lbImg.src = el.currentSrc || el.src;
+                lbImg.alt = el.alt || '';
+                overlay.classList.add('active');
+                overlay.setAttribute('aria-hidden','false');
+                document.body.style.overflow = 'hidden';
+                el.focus?.();
+            }
+            function close(){ overlay.classList.remove('active'); overlay.setAttribute('aria-hidden','true'); document.body.style.overflow = ''; }
+            function prev(){ open((idx-1+imgs.length)%imgs.length); }
+            function next(){ open((idx+1)%imgs.length); }
+
+            imgs.forEach((img,i)=>{
+                img.style.cursor = 'zoom-in';
+                img.setAttribute('tabindex','0');
+                img.addEventListener('click', ()=> open(i));
+                img.addEventListener('keydown', e => { if(e.key==='Enter' || e.key===' ') { e.preventDefault(); open(i); } });
+            });
+
+            overlay.querySelector('.lb-close').addEventListener('click', close);
+            overlay.querySelector('.lb-prev').addEventListener('click', prev);
+            overlay.querySelector('.lb-next').addEventListener('click', next);
+            overlay.addEventListener('click', e => { if(e.target === overlay) close(); });
+            window.addEventListener('keydown', e => {
+                if(overlay.classList.contains('active')){
+                    if(e.key === 'Escape') close();
+                    if(e.key === 'ArrowLeft') prev();
+                    if(e.key === 'ArrowRight') next();
+                }
+            });
+        })();
     </script>
 </body>
 </html>

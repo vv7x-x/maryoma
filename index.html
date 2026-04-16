@@ -418,6 +418,20 @@
             .ring-3 { width: 234px; height: 234px; }
             .portrait-frame { width: 190px; height: 190px; }
         }
+            /* Responsive helpers */
+            img, video { max-width: 100%; height: auto; display: block; }
+            main { max-width: 1100px; width: 100%; box-sizing: border-box; }
+            @media (max-width: 800px) {
+                body { align-items: flex-start; padding-top: 20px; }
+                main { padding: 1rem; }
+                .portrait-frame { width: 160px; height: 160px; }
+                .ring-1, .ring-2, .ring-3 { display: none; }
+                .aurora-layer { opacity: 0.6; }
+                canvas#petals, #bg-canvas { display: none; }
+            }
+            @media (prefers-reduced-motion: reduce) {
+                .ring, .aurora-layer, .portrait-halo, .gem { animation: none !important; transition: none !important; }
+            }
     </style>
 </head>
 <body>
@@ -446,7 +460,7 @@
                 <div class="ring ring-3"></div>
 
                 <div class="portrait-frame">
-                    <img src="mariam3.jpg" alt="Mariam" onerror="this.style.background='linear-gradient(135deg,#8b0a2a,#d4a851)'; this.style.opacity='0.5'"/>
+                    <img src="mariam3.jpg" alt="صورة مريم" decoding="async" loading="eager" onerror="this.style.background='linear-gradient(135deg,#8b0a2a,#d4a851)'; this.style.opacity='0.5'"/>
                     <div class="glare"></div>
                 </div>
 

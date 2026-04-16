@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ar" dir="ltr">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Mariam's Room ✦</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌹</text></svg>">
+    <meta name="theme-color" content="#1c0512">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Aref+Ruqaa:wght@400;700&family=Amiri:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <style>
+        :root {
+            --gold: #ec4899;
+            --gold-light: #fce7f3;
+            --gold-dim: rgba(236, 72, 153, 0.35);
+            --glass: rgba(255, 255, 255, 0.06);
+            --glass-gold: rgba(236, 72, 153, 0.15);
+            --glass-border: rgba(236, 72, 153, 0.3);
+            --text-soft: rgba(255, 220, 230, 0.9);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Cormorant Garamond', serif;
+            background: #1c0512;
+            color: #fff;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Background layers */
+        #bg-canvas { position: fixed; inset: 0; z-index: 0; }
+        .aurora { position: fixed; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; opacity: 0.8; }
+        .aurora-layer { position: absolute; border-radius: 50%; will-change: transform; animation: drift 20s ease-in-out infinite alternate; }
+        .a1 { width: 80vw; height: 70vh; background: radial-gradient(ellipse, rgba(190, 24, 93, 0.5) 0%, transparent 70%); top: -20%; left: -20%; animation-duration: 25s; }
+        .a2 { width: 60vw; height: 80vh; background: radial-gradient(ellipse, rgba(236, 72, 153, 0.5) 0%, transparent 70%); bottom: -20%; right: -20%; animation-duration: 18s; animation-delay: -10s; }
+        .a3 { width: 50vw; height: 50vh; background: radial-gradient(ellipse, rgba(244, 114, 182, 0.3) 0%, transparent 70%); top: 20%; left: 25%; animation-duration: 15s; animation-delay: -5s; }
+        @keyframes drift { 0% { transform: translate(0,0) scale(1); } 100% { transform: translate(6vw,4vh) scale(1.2); } }
+
+        canvas#petals { position: fixed; inset: 0; z-index: 3; pointer-events: none; }
+
+        /* Header */
+        header {
+            position: fixed; top: 0; width: 100%; z-index: 50;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 1rem 2rem;
+            background: rgba(7,0,15,0.4);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+        }
+... (file truncated)
