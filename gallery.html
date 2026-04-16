@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="ar" dir="ltr">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Mariam's Room ✦</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Aref+Ruqaa:wght@400;700&family=Amiri:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <style>
+        :root {
+            --gold: #ec4899;
+            --gold-light: #fce7f3;
+            --gold-dim: rgba(236, 72, 153, 0.35);
+            --glass: rgba(255, 255, 255, 0.06);
+            --glass-gold: rgba(236, 72, 153, 0.15);
+            --glass-border: rgba(236, 72, 153, 0.3);
+            --text-soft: rgba(255, 220, 230, 0.9);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Cormorant Garamond', serif;
+            background: #1c0512;
+            color: #fff;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Background layers */
+        #bg-canvas { position: fixed; inset: 0; z-index: 0; }
+        .aurora { position: fixed; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; opacity: 0.8; }
+        .aurora-layer { position: absolute; border-radius: 50%; mix-blend-mode: screen; will-change: transform; animation: drift 20s ease-in-out infinite alternate; }
+        .a1 { width: 80vw; height: 70vh; background: radial-gradient(ellipse, rgba(190, 24, 93, 0.5) 0%, transparent 70%); top: -20%; left: -20%; animation-duration: 25s; }
+        .a2 { width: 60vw; height: 80vh; background: radial-gradient(ellipse, rgba(236, 72, 153, 0.5) 0%, transparent 70%); bottom: -20%; right: -20%; animation-duration: 18s; animation-delay: -10s; }
+        .a3 { width: 50vw; height: 50vh; background: radial-gradient(ellipse, rgba(244, 114, 182, 0.3) 0%, transparent 70%); top: 20%; left: 25%; animation-duration: 15s; animation-delay: -5s; }
+        @keyframes drift { 0% { transform: translate(0,0) scale(1); } 100% { transform: translate(6vw,4vh) scale(1.2); } }
+
+        .grain { position: fixed; inset: -50%; width: 200%; height: 200%; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); opacity: 0.035; pointer-events: none; z-index: 2; animation: grainAnim .5s steps(2) infinite; }
+        @keyframes grainAnim { 0%{transform:translate(0,0)} 25%{transform:translate(-2%,2%)} 50%{transform:translate(2%,-1%)} 75%{transform:translate(-1%,-2%)} 100%{transform:translate(1%,1%)} }
+
+        canvas#petals { position: fixed; inset: 0; z-index: 3; pointer-events: none; }
+
+        /* Header */
+        header {
+            position: fixed; top: 0; width: 100%; z-index: 50;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 1rem 2rem;
+            background: rgba(7,0,15,0.4);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+        }
+        .logo {
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            font-size: 1.5rem;
+            color: var(--gold-light);
+            display: flex; align-items: center; gap: .5rem;
+            text-shadow: 0 0 30px rgba(212,168,81,0.4);
+        }
+        .logo .material-symbols-outlined { font-size: 1.2rem; font-variation-settings: 'FILL' 1; color: var(--gold); animation: pulse 2s ease-in-out infinite; }
+        @keyframes pulse { 0%,100%{opacity:.6} 50%{opacity:1} }
+
+        .header-btn {
+            width: 44px; height: 44px;
+            background: var(--glass-gold);
+            border: 1px solid var(--glass-border);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--gold-light);
+            transition: all .3s;
+            backdrop-filter: blur(10px);
+        }
+        .header-btn:hover { background: rgba(212,168,81,0.2); transform: scale(1.1); box-shadow: 0 0 20px var(--gold-dim); }
+        .header-btn .material-symbols-outlined { font-size: 1.3rem; font-variation-settings: 'FILL' 1; }
+
+        /* Scroll container */
+        .page-scroll {
+            position: relative; z-index: 10;
+            height: 100vh; overflow-y: auto; overflow-x: hidden;
+            padding-top: 80px; padding-bottom: 40px;
+            scroll-behavior: smooth;
+        }
+        .page-scroll::-webkit-scrollbar { width: 4px; }
+        .page-scroll::-webkit-scrollbar-track { background: transparent; }
+        .page-scroll::-webkit-scrollbar-thumb { background: var(--gold-dim); border-radius: 2px; }
+
+        /* Hero hint */
+        .hero-hint {
+            text-align: center;
+            margin-bottom: 1rem;
+            padding: 0 1rem;
+        }
+        .hero-hint p {
+            font-family: 'Aref Ruqaa', serif;
+            font-size: 1.1rem;
+            color: var(--text-soft);
+            background: var(--glass-gold);
+            border: 1px solid var(--glass-border);
+            display: inline-block;
+            padding: .6rem 2rem;
+            border-radius: 100px;
+            backdrop-filter: blur(10px);
+            transition: outline 0.3s ease;
+            box-shadow: 0 5px 30px rgba(0,0,0,0.4);
+            will-change: transform;
+            direction: rtl;
+        }
+        .hero-hint .avatar {
+            width: 60px; height: 60px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 2px solid var(--gold);
+            margin: 0 auto 1rem;
+            box-shadow: 0 0 30px var(--gold-dim);
+        }
+        .hero-hint .avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* 3D Carousel Scene */
+        .scene {
+            --scene-scale: 1;
+            width: 300px; height: 460px;
+            perspective: 2200px;
+            margin: 0 auto;
+            position: relative; z-index: 20;
+            cursor: grab;
+            touch-action: none;
+            opacity: 0;
+            animation: sceneEntrance 1.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.3s forwards;
+        }
+        @media (max-width: 1024px) { .scene { --scene-scale: 0.9; } }
+        @media (max-width: 768px) { .scene { --scene-scale: 0.75; } }
+        @media (max-width: 480px) { .scene { --scene-scale: 0.6; } }
+        @media (max-width: 380px) { .scene { --scene-scale: 0.52; } }
+        @media (max-height: 850px) { .scene { --scene-scale: 0.8; } }
+        @media (max-height: 700px) { .scene { --scene-scale: 0.65; } }
+
+        @keyframes sceneEntrance {
+            0% { opacity: 0; transform: translateY(60px) scale(calc(var(--scene-scale) * 0.9)); }
+            100% { opacity: 1; transform: translateY(0) scale(var(--scene-scale)); }
+        }
+        .scene:active { cursor: grabbing; }
+
+        .carousel {
+            width: 100%; height: 100%;
+            position: absolute;
+            transform-style: preserve-3d;
+            transform: translateZ(-480px) rotateY(0deg);
+            will-change: transform;
+            transition: transform .6s cubic-bezier(.25,.8,.25,1);
+        }
+
+        /* Cards */
+        .flip-card {
+            position: absolute;
+            width: 300px; height: 460px;
+            left: 0; top: 0;
+            transform-style: preserve-3d;
+            user-select: none;
+        }
+        .flip-card:nth-child(1) { transform: rotateY(0deg) translateZ(480px); }
+        .flip-card:nth-child(2) { transform: rotateY(60deg) translateZ(480px); }
+        .flip-card:nth-child(3) { transform: rotateY(120deg) translateZ(480px); }
+        .flip-card:nth-child(4) { transform: rotateY(180deg) translateZ(480px); }
+        .flip-card:nth-child(5) { transform: rotateY(240deg) translateZ(480px); }
+        .flip-card:nth-child(6) { transform: rotateY(300deg) translateZ(480px); }
+
+        .flip-card-inner {
+            position: relative; width: 100%; height: 100%;
+            text-align: center;
+            transition: transform .9s cubic-bezier(.175,.885,.32,1.275);
+            transform-style: preserve-3d;
+            pointer-events: none;
+        }
+        .flip-card { pointer-events: auto; }
+        .flip-card.flipped .flip-card-inner { transform: rotateY(180deg); }
+
+        /* Card faces */
+        .card-front, .card-back {
+            position: absolute; width: 100%; height: 100%;
+            border-radius: 1.8rem;
+            backface-visibility: hidden;
+            overflow: hidden;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 1.2rem;
+            pointer-events: auto;
+        }
+
+        .card-front {
+            background: linear-gradient(145deg, rgba(255,255,255,0.1) 0%, rgba(236,72,153,0.1) 50%, rgba(255,255,255,0.05) 100%);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(236,72,153,0.3);
+            box-shadow:
+                0 20px 60px rgba(0,0,0,0.5),
+                inset 0 1px 0 rgba(255,255,255,0.15),
+                inset 0 -1px 0 rgba(0,0,0,0.2),
+                0 0 0 1px rgba(0,0,0,0.2);
+        }
+        /* Gold shimmer edge */
+        .card-front::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 60%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(212,168,81,0.08), transparent);
+            transform: skewX(-20deg);
+            animation: cardShimmer 6s ease-in-out infinite;
+        }
+        @keyframes cardShimmer {
+            0%,100% { left: -100%; }
+            50% { left: 150%; }
+        }
+
+        .card-back {
+            background: linear-gradient(135deg, rgba(131,24,67,0.85) 0%, rgba(80,7,36,0.95) 100%);
+            border: 1px solid rgba(236,72,153,0.3);
+            transform: rotateY(180deg);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6), inset 0 0 80px rgba(0,0,0,0.4);
+        }
+        .card-back::before {
+            content: '';
+            position: absolute;
+            inset: 12px;
+            border: 1px solid rgba(212,168,81,0.15);
+            border-radius: 1.4rem;
+            pointer-events: none;
+        }
+
+        /* Photo container */
+        .photo-wrap {
+            width: 100%;
+            height: 62%;
+            border-radius: 1.3rem;
+            overflow: hidden;
+            margin-bottom: 1rem;
+            position: relative;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(212,168,81,0.2);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.4), inset 0 0 20px rgba(0,0,0,0.2);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .photo-wrap img {
+            position: absolute;
+            width: 100%; height: 100%;
+            object-fit: cover;
+            transition: transform 1s ease;
+        }
+        .flip-card:hover .photo-wrap img { transform: scale(1.04); }
+        .photo-wrap .placeholder {
+            font-family: 'Aref Ruqaa', serif;
+            color: rgba(212,168,81,0.4);
+            font-size: .9rem;
+            z-index: 0;
+        }
+
+        /* Card front text */
+        .card-title {
+            font-family: 'Aref Ruqaa', serif;
+            font-size: 1.5rem;
+            color: var(--gold-light);
+            direction: rtl;
+            display: flex; align-items: center; gap: .4rem;
+            margin-bottom: .4rem;
+            text-shadow: 0 0 20px rgba(212,168,81,0.4);
+        }
+        .card-title .material-symbols-outlined {
+            font-size: 1.2rem;
+            font-variation-settings: 'FILL' 1;
+            color: var(--gold);
+            animation: pulse 2.5s ease-in-out infinite;
+        }
+        .card-hint {
+            font-family: 'Amiri', serif;
+            font-size: 1rem;
+            color: rgba(255,220,200,0.7);
+            background: rgba(212,168,81,0.1);
+            border: 1px solid rgba(212,168,81,0.2);
+            padding: .3rem 1.2rem;
+            border-radius: 100px;
+            direction: rtl;
+        }
+
+        /* Card back elements */
+        .back-ornament {
+            position: absolute;
+            font-size: 4rem;
+            opacity: 0.07;
+            font-family: 'Aref Ruqaa', serif;
+            color: var(--gold);
+            pointer-events: none;
+        }
+        .back-ornament.tl { top: 1.5rem; left: 1.5rem; }
+        .back-ornament.br { bottom: 1.5rem; right: 1.5rem; }
+
+        .back-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            color: var(--gold-light);
+            margin-bottom: 1rem;
+            text-shadow: 0 0 30px rgba(212,168,81,0.5);
+            font-style: italic;
+        }
+        .back-divider {
+            width: 60px; height: 1px;
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+            margin: 0 auto .8rem;
+        }
+        .back-poem {
+            font-family: 'Amiri', serif;
+            font-size: 1.25rem;
+            line-height: 2;
+            color: rgba(255, 235, 220, 0.95);
+            direction: rtl;
+            padding: .8rem 1rem;
+            position: relative;
+            text-shadow: 0 1px 10px rgba(0,0,0,0.5);
+        }
+        @media (max-width: 480px) {
+            .back-poem { font-size: 1.05rem; line-height: 1.6; }
+            .back-title { font-size: 1.5rem; }
+            .card-title { font-size: 1.3rem; }
+        }
+        .back-poem::before, .back-poem::after {
+            content: '';
+            display: block;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(212,168,81,0.3), transparent);
+            margin: .4rem 0;
+        }
+
+        /* Controls */
+        .controls {
+            display: flex; gap: 4rem; justify-content: center;
+            margin-top: 2rem; padding-bottom: 1rem;
+            position: relative; z-index: 40;
+        }
+        .ctrl-btn {
+            width: 60px; height: 60px;
+            background: var(--glass-gold);
+            border: 1px solid var(--glass-border);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--gold-light);
+            transition: all .3s;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+        }
+        .ctrl-btn:hover { background: rgba(212,168,81,0.2); transform: scale(1.15); box-shadow: 0 0 30px var(--gold-dim); }
+        .ctrl-btn .material-symbols-outlined { font-size: 1.8rem; font-variation-settings: 'FILL' 0; }
+
+        /* Carousel position dots */
+        .dots {
+            display: flex; gap: .5rem; justify-content: center;
+            margin-top: 1.2rem;
+        }
+        .dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: rgba(212,168,81,0.3);
+            transition: all .3s;
+        }
+        .dot.active { background: var(--gold); box-shadow: 0 0 10px var(--gold); width: 18px; border-radius: 3px; }
+
+        /* Audio btn */
+        #audio-btn { transition: all .3s; }
+        #audio-btn.playing { background: rgba(212,168,81,0.2); box-shadow: 0 0 20px var(--gold-dim); }
+        #audio-btn.playing .material-symbols-outlined { color: var(--gold-light); }
+
+        /* Responsive Controls */
+        @media (max-width: 480px) {
+            .controls { gap: 2rem; margin-top: .5rem; }
+            .ctrl-btn { width: 50px; height: 50px; }
+            .ctrl-btn .material-symbols-outlined { font-size: 1.5rem; }
+            .page-scroll { padding-top: 60px; }
+        }
+    </style>
+</head>
+<body>
+    <div id="page-transition-overlay" style="position:fixed; inset:0; background:#1c0512; z-index:99999; pointer-events:none; transition: opacity 1.2s cubic-bezier(0.2, 0.8, 0.2, 1);"></div>
+
+    <audio id="bg-music" loop preload="auto">
+        <source src="https://cdn.pixabay.com/audio/2022/10/25/audio_24e3bf68aa.mp3" type="audio/mpeg">
+    </audio>
+
+    <canvas id="bg-canvas"></canvas>
+    <div class="aurora">
+        <div class="aurora-layer a1"></div>
+        <div class="aurora-layer a2"></div>
+        <div class="aurora-layer a3"></div>
+    </div>
+    <div class="grain"></div>
+    <canvas id="petals"></canvas>
+
+    <!-- Header -->
+    <header>
+        <div class="logo">
+            Mariam's Room
+            <span class="material-symbols-outlined">local_florist</span>
+        </div>
+        <div style="display:flex;gap:.7rem;align-items:center;">
+            <button class="header-btn" id="audio-btn" onclick="toggleAudio()">
+                <span class="material-symbols-outlined" id="audio-icon">music_off</span>
+            </button>
+            <a href="index.html" class="header-btn" id="home-btn" style="text-decoration:none;">
+                <span class="material-symbols-outlined">home</span>
+            </a>
+        </div>
+    </header>
+
+    <!-- Scrollable page -->
+    <div class="page-scroll">
+        <!-- Hero hint -->
+        <div class="hero-hint" style="opacity:0; animation: sceneEntrance 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;">
+            <div class="avatar">
+                <img src="mariam3.jpg" onerror="this.style.background='linear-gradient(135deg,#8b0a2a,#d4a851)'; this.style.opacity='.5'"/>
+            </div>
+            <p style="position:relative;">اسحبي بأصبعك لتحريك الصور.. ثم انقري 🌸
+                <span class="material-symbols-outlined" style="position:absolute; top:-12px; right:-12px; color:var(--gold-light); animation: pulse 2s infinite; text-shadow: 0 0 10px var(--gold);">auto_awesome</span>
+            </p>
+        </div>
+
+        <!-- 3D Carousel -->
+        <div class="scene" id="carousel-scene">
+            <div class="carousel" id="carousel-spinner">
+
+                <!-- Card 1 -->
+                <div class="flip-card" onclick="if(!window.hasDragged){this.classList.toggle('flipped');updateDots();}">
+                    <div class="flip-card-inner">
+                        <div class="card-front">
+                            <div class="photo-wrap">
+                                <span class="placeholder">١</span>
+                                <img src="mariam1.jpg" draggable="false" onerror="this.style.opacity='0'"/>
+                            </div>
+                            <p class="card-title">أثير الذكريات <span class="material-symbols-outlined">favorite</span></p>
+                            <p class="card-hint">الوجه الآخر 🌹</p>
+                        </div>
+                        <div class="card-back">
+                            <span class="back-ornament tl">✦</span>
+                            <span class="back-ornament br">✦</span>
+                            <p class="back-title">نبضات قلب</p>
+                            <div class="back-divider"></div>
+                            <p class="back-poem">" في كل لحظة معكِ، يُزهر الربيع وتشرق الحياة من جديد.. "</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="flip-card" onclick="if(!window.hasDragged){this.classList.toggle('flipped');updateDots();}">
+                    <div class="flip-card-inner">
+                        <div class="card-front">
+                            <div class="photo-wrap">
+                                <span class="placeholder">٢</span>
+                                <img src="mariam2.jpg" draggable="false" onerror="this.style.opacity='0'"/>
+                            </div>
+                            <p class="card-title">نبض اللحظات <span class="material-symbols-outlined">flare</span></p>
+                            <p class="card-hint">الوجه الآخر 🌹</p>
+                        </div>
+                        <div class="card-back">
+                            <span class="back-ornament tl">❋</span>
+                            <span class="back-ornament br">❋</span>
+                            <p class="back-title">شمسٌ ودفء</p>
+                            <div class="back-divider"></div>
+                            <p class="back-poem">" ابتسامتكِ الدافئة هي إشراقة الصباح، وصوتكِ لحني المفضل.. "</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="flip-card" onclick="if(!window.hasDragged){this.classList.toggle('flipped');updateDots();}">
+                    <div class="flip-card-inner">
+                        <div class="card-front">
+                            <div class="photo-wrap">
+                                <span class="placeholder">٣</span>
+                                <img src="mariam3.jpg" draggable="false" onerror="this.style.opacity='0'"/>
+                            </div>
+                            <p class="card-title">سحرٌ لا ينتهي <span class="material-symbols-outlined">stars</span></p>
+                            <p class="card-hint">الوجه الآخر 🌹</p>
+                        </div>
+                        <div class="card-back">
+                            <span class="back-ornament tl">✶</span>
+                            <span class="back-ornament br">✶</span>
+                            <p class="back-title">سحرٌ وخيال</p>
+                            <div class="back-divider"></div>
+                            <p class="back-poem">" كالقمر في وسط العتمة تتلألأين، تأسرين العيون بسحرك الأزليّ.. "</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 4 -->
+                <div class="flip-card" onclick="if(!window.hasDragged){this.classList.toggle('flipped');updateDots();}">
+                    <div class="flip-card-inner">
+                        <div class="card-front">
+                            <div class="photo-wrap">
+                                <span class="placeholder">٤</span>
+                                <img src="mariam4.jpg" draggable="false" onerror="this.style.opacity='0'"/>
+                            </div>
+                            <p class="card-title">عطر الأيام <span class="material-symbols-outlined">local_florist</span></p>
+                            <p class="card-hint">الوجه الآخر 🌹</p>
+                        </div>
+                        <div class="card-back">
+                            <span class="back-ornament tl">✿</span>
+                            <span class="back-ornament br">✿</span>
+                            <p class="back-title">حضورٌ آسر</p>
+                            <div class="back-divider"></div>
+                            <p class="back-poem">" لا شيء يُضاهي جمال حضورك، كعطرٍ يُغمر المكان بالسعادة.. "</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 5 -->
+                <div class="flip-card" onclick="if(!window.hasDragged){this.classList.toggle('flipped');updateDots();}">
+                    <div class="flip-card-inner">
+                        <div class="card-front">
+                            <div class="photo-wrap">
+                                <span class="placeholder">٥</span>
+                                <img src="mariam5.jpg" draggable="false" onerror="this.style.opacity='0'"/>
+                            </div>
+                            <p class="card-title">لحن الروح <span class="material-symbols-outlined">music_note</span></p>
+                            <p class="card-hint">الوجه الآخر 🌹</p>
+                        </div>
+                        <div class="card-back">
+                            <span class="back-ornament tl">♫</span>
+                            <span class="back-ornament br">♪</span>
+                            <p class="back-title">أجمل قصيدة</p>
+                            <div class="back-divider"></div>
+                            <p class="back-poem">" أنتِ القصيدة التي لم تُكتب، واللحن العذب الذي يُطرب القلب.. "</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 6 -->
+                <div class="flip-card" onclick="if(!window.hasDragged){this.classList.toggle('flipped');updateDots();}">
+                    <div class="flip-card-inner">
+                        <div class="card-front">
+                            <div class="photo-wrap">
+                                <span class="placeholder">٦</span>
+                                <img src="mariam6.jpg" draggable="false" onerror="this.style.opacity='0'"/>
+                            </div>
+                            <p class="card-title">همس النجوم <span class="material-symbols-outlined">bedtime</span></p>
+                            <p class="card-hint">الوجه الآخر 🌹</p>
+                        </div>
+                        <div class="card-back">
+                            <span class="back-ornament tl">★</span>
+                            <span class="back-ornament br">☽</span>
+                            <p class="back-title">بريق السماء</p>
+                            <div class="back-divider"></div>
+                            <p class="back-poem">" لو كانت النجوم تتكلم، لتحدثت عن بريقكِ وسحركِ الذي يخطف الأبصار.. "</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Position dots -->
+        <div class="dots" id="dots-row">
+            <div class="dot active"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls">
+            <button class="ctrl-btn" onclick="rotateLeft()">
+                <span class="material-symbols-outlined">arrow_forward</span>
+            </button>
+            <button class="ctrl-btn" onclick="rotateRight()">
+                <span class="material-symbols-outlined">arrow_back</span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // ──────────────── STAR BG ────────────────
+        const bgC = document.getElementById('bg-canvas');
+        const bgX = bgC.getContext('2d');
+        let stars = [];
+        function resizeBg() {
+            bgC.width = window.innerWidth; bgC.height = window.innerHeight;
+            stars = Array.from({length:200}, () => ({
+                x: Math.random()*bgC.width, y: Math.random()*bgC.height,
+                r: Math.random()*1.1+.2, o: Math.random()*.5+.2,
+                spd: Math.random()*.25+.04, gold: Math.random()>.55,
+                tw: Math.random()*Math.PI*2
+            }));
+        }
+        resizeBg(); window.addEventListener('resize', resizeBg);
+        (function drawBg() {
+            bgX.clearRect(0,0,bgC.width,bgC.height);
+            stars.forEach(s => {
+                s.tw += .018;
+                const o = s.o * (.55 + .45*Math.sin(s.tw));
+                bgX.beginPath(); bgX.arc(s.x, s.y, s.r, 0, Math.PI*2);
+                bgX.fillStyle = s.gold ? `rgba(212,168,81,${o})` : `rgba(255,255,255,${o})`;
+                bgX.fill();
+                s.y -= s.spd; if(s.y<0){s.y=bgC.height; s.x=Math.random()*bgC.width;}
+            });
+            requestAnimationFrame(drawBg);
+        })();
+
+        // ──────────────── PETALS ────────────────
+        const pC = document.getElementById('petals');
+        const pX = pC.getContext('2d');
+        let petals = [];
+        function resizeP() { pC.width=window.innerWidth; pC.height=window.innerHeight; }
+        resizeP(); window.addEventListener('resize', resizeP);
+        function spawnPetal() {
+            const g = Math.random()>.45;
+            petals.push({ x:Math.random()*pC.width, y:-20, sz:Math.random()*7+3, spd:Math.random()*1.2+.4, drift:(Math.random()-.5)*.7, rot:Math.random()*Math.PI*2, rs:(Math.random()-.5)*.06, o:Math.random()*.45+.25, gold:g, hue:g?35:Math.random()*25+330 });
+        }
+        setInterval(spawnPetal, 350);
+        (function drawP() {
+            pX.clearRect(0,0,pC.width,pC.height);
+            petals = petals.filter(p=>p.y<pC.height+30);
+            petals.forEach(p => {
+                p.y+=p.spd; p.x+=p.drift; p.rot+=p.rs;
+                pX.save(); pX.translate(p.x,p.y); pX.rotate(p.rot); pX.globalAlpha=p.o;
+                pX.beginPath(); pX.ellipse(0,0,p.sz,p.sz*1.9,0,0,Math.PI*2);
+                pX.fillStyle=`hsla(${p.hue},65%,75%,1)`;
+                pX.fill(); pX.restore();
+            });
+            requestAnimationFrame(drawP);
+        })();
+
+        // ──────────────── CAROUSEL DRAG ────────────────
+        const scene = document.getElementById('carousel-scene');
+        const carousel = document.getElementById('carousel-spinner');
+        const RADIUS = 480; // Responsive geometric scale handled in CSS
+        let currentAngle = 0, startX = 0, isDragging = false, prevAngle = 0;
+        window.hasDragged = false;
+
+        function setCarousel(angle, instant) {
+            carousel.style.transition = instant ? 'none' : 'transform .6s cubic-bezier(.25,.8,.25,1)';
+            carousel.style.transform = `translateZ(-${RADIUS}px) rotateY(${angle}deg)`;
+        }
+
+        scene.addEventListener('mousedown', e => { isDragging=true; window.hasDragged=false; startX=e.pageX; prevAngle=currentAngle; carousel.style.transition='none'; });
+        window.addEventListener('mouseup', endDrag);
+        window.addEventListener('mousemove', e => { if(!isDragging) return; let d=e.pageX-startX; if(Math.abs(d)>7)window.hasDragged=true; currentAngle=prevAngle+d*.38; setCarousel(currentAngle,true); });
+        scene.addEventListener('touchstart', e => { isDragging=true; window.hasDragged=false; startX=e.touches[0].pageX; prevAngle=currentAngle; carousel.style.transition='none'; }, {passive:true});
+        window.addEventListener('touchend', endDrag);
+        window.addEventListener('touchmove', e => { if(!isDragging)return; let d=e.touches[0].pageX-startX; if(Math.abs(d)>7)window.hasDragged=true; currentAngle=prevAngle+d*.38; setCarousel(currentAngle,true); }, {passive:true});
+
+        function endDrag() {
+            if(!isDragging) return; isDragging=false;
+            currentAngle = Math.round(currentAngle/60)*60;
+            setCarousel(currentAngle, false);
+            updateDots();
+            setTimeout(()=>{window.hasDragged=false;},60);
+        }
+
+        function rotateLeft() { currentAngle+=60; setCarousel(currentAngle,false); updateDots(); }
+        function rotateRight() { currentAngle-=60; setCarousel(currentAngle,false); updateDots(); }
+
+        // Dots
+        function updateDots() {
+            const dots = document.querySelectorAll('.dot');
+            const idx = (((-currentAngle % 360) + 360) % 360) / 60 | 0;
+            dots.forEach((d,i) => d.classList.toggle('active', i===idx));
+        }
+
+        // ──────────────── AUDIO ────────────────
+        const audio = document.getElementById('bg-music');
+        const audioBtn = document.getElementById('audio-btn');
+        const audioIcon = document.getElementById('audio-icon');
+        let isPlaying = false;
+        function toggleAudio() {
+            if(isPlaying){ audio.pause(); audioIcon.textContent='music_off'; audioBtn.classList.remove('playing'); }
+            else { audio.play().then(()=>{ audioIcon.textContent='music_note'; audioBtn.classList.add('playing'); }).catch(()=>{}); }
+            isPlaying=!isPlaying;
+        }
+
+        // Page Reveal Transition
+        window.addEventListener('load', () => {
+            const overlay = document.getElementById('page-transition-overlay');
+            if(overlay) {
+                setTimeout(() => {
+                    overlay.style.opacity = '0';
+                    setTimeout(() => overlay.remove(), 1200);
+                }, 100);
+            }
+        });
+
+        // Outgoing Transition to code3
+        const homeBtn = document.getElementById('home-btn');
+        if (homeBtn) {
+            homeBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const destination = this.href;
+                
+                const outOverlay = document.createElement('div');
+                outOverlay.style.background = '#2a0416';
+                outOverlay.style.zIndex = '99999';
+                outOverlay.style.opacity = '0';
+                outOverlay.style.transition = 'opacity 0.8s ease-in-out';
+                document.body.appendChild(outOverlay);
+
+                document.querySelector('.page-scroll').style.transition = 'opacity 0.6s, transform 0.6s';
+                document.querySelector('.page-scroll').style.opacity = '0';
+                document.querySelector('.page-scroll').style.transform = 'scale(0.9)';
+
+                requestAnimationFrame(() => outOverlay.style.opacity = '1');
+                setTimeout(() => window.location.href = destination, 800);
+            });
+        }
+    </script>
+</body>
+</html>
