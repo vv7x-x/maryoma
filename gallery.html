@@ -413,8 +413,8 @@
     <!-- Overlay starts as blinding white flash matching previous page portal -->
     <div id="page-transition-overlay" style="position:fixed; inset:0; background: #fff; box-shadow: inset 0 0 100px #ec4899; z-index:99999; pointer-events:none; transition: opacity 1.5s ease-out, transform 1.5s cubic-bezier(0.7, 0, 0.1, 1), background 1s;"></div>
 
-    <audio id="bg-music" loop preload="auto">
-        <source src="https://cdn.pixabay.com/audio/2022/10/25/audio_24e3bf68aa.mp3" type="audio/mpeg">
+    <audio id="bg-music" autoplay playsinline loop preload="auto">
+        <source src="02_-_Waadtak.mp3" type="audio/mpeg">
     </audio>
 
     <canvas id="bg-canvas"></canvas>
@@ -723,6 +723,35 @@
                 }, 50);
             }
         });
+
+        // Attempt smart autoplay: try audible play, fallback to muted autoplay,
+        // then unmute on first user interaction (click/touch) without showing a button.
+        (function smartAutoplay(){
+            const audioEl = document.getElementById('bg-music');
+            if(!audioEl) return;
+            // Try to play unmuted first
+            audioEl.muted = false;
+            const p = audioEl.play();
+            if(p !== undefined) {
+                p.then(() => {
+                    // Played successfully (some browsers allow autoplay)
+                    audioEl.muted = false;
+                }).catch(() => {
+                    // Autoplay with sound blocked: enable muted autoplay
+                    audioEl.muted = true;
+                    audioEl.play().catch(()=>{});
+
+                    const unmute = () => {
+                        audioEl.muted = false;
+                        audioEl.play().catch(()=>{});
+                        window.removeEventListener('click', unmute);
+                        window.removeEventListener('touchstart', unmute);
+                    };
+                    window.addEventListener('click', unmute, {passive:true});
+                    window.addEventListener('touchstart', unmute, {passive:true});
+                });
+            }
+        })();
 
         // Outgoing Transition to code3
         const homeBtn = document.getElementById('home-btn');
