@@ -4,6 +4,8 @@
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
     <title>Mariam's Room ✦</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌹</text></svg>">
+    <meta name="theme-color" content="#1c0512">
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Aref+Ruqaa:wght@400;700&family=Amiri:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
     <style>
@@ -137,8 +139,8 @@
         }
 
         @keyframes sceneEntrance {
-            0% { opacity: 0; transform: translateY(60px) scale(calc(var(--scene-scale) * 0.9)); }
-            100% { opacity: 1; transform: translateY(0) scale(var(--scene-scale)); }
+            0% { opacity: 0; transform: scale(calc(var(--scene-scale) * 2.5)); }
+            100% { opacity: 1; transform: scale(var(--scene-scale)); }
         }
         .scene:active { cursor: grabbing; }
 
@@ -377,7 +379,8 @@
     </style>
 </head>
 <body>
-    <div id="page-transition-overlay" style="position:fixed; inset:0; background:#1c0512; z-index:99999; pointer-events:none; transition: opacity 1.2s cubic-bezier(0.2, 0.8, 0.2, 1);"></div>
+    <!-- Overlay starts as blinding white flash matching previous page portal -->
+    <div id="page-transition-overlay" style="position:fixed; inset:0; background: #fff; box-shadow: inset 0 0 100px #ec4899; z-index:99999; pointer-events:none; transition: opacity 1.5s ease-out, transform 1.5s cubic-bezier(0.7, 0, 0.1, 1), background 1s;"></div>
 
     <audio id="bg-music" loop preload="auto">
         <source src="https://cdn.pixabay.com/audio/2022/10/25/audio_24e3bf68aa.mp3" type="audio/mpeg">
@@ -676,14 +679,17 @@
             isPlaying=!isPlaying;
         }
 
-        // Page Reveal Transition
+        // Page Reveal Transition (Materializing out of the portal)
         window.addEventListener('load', () => {
             const overlay = document.getElementById('page-transition-overlay');
             if(overlay) {
+                // Morph from blinding white to void pink immediately
+                overlay.style.background = 'radial-gradient(circle, #ec4899 0%, #1c0512 100%)';
                 setTimeout(() => {
                     overlay.style.opacity = '0';
-                    setTimeout(() => overlay.remove(), 1200);
-                }, 100);
+                    overlay.style.transform = 'scale(6) rotate(45deg)';
+                    setTimeout(() => overlay.remove(), 1600);
+                }, 50);
             }
         });
 
@@ -694,19 +700,27 @@
                 e.preventDefault();
                 const destination = this.href;
                 
+                // Whirlwind outgoing scale
+                document.querySelector('.scene').style.transition = 'transform 1s cubic-bezier(0.5, 0, 0.2, 1), opacity 0.8s, filter 0.8s';
+                document.querySelector('.scene').style.transform = 'scale(0.1) translateZ(-2000px) rotateY(720deg)';
+                document.querySelector('.scene').style.filter = 'blur(10px) brightness(150%)';
+                document.querySelector('.scene').style.opacity = '0';
+                
+                document.querySelector('.page-scroll').style.transition = 'opacity 0.8s';
+                document.querySelector('.page-scroll').style.opacity = '0';
+
+                // Fade back into void
                 const outOverlay = document.createElement('div');
-                outOverlay.style.background = '#2a0416';
+                outOverlay.style.position = 'fixed';
+                outOverlay.style.inset = '0';
+                outOverlay.style.background = '#1c0512';
                 outOverlay.style.zIndex = '99999';
                 outOverlay.style.opacity = '0';
-                outOverlay.style.transition = 'opacity 0.8s ease-in-out';
+                outOverlay.style.transition = 'opacity 1s ease-in-out';
                 document.body.appendChild(outOverlay);
 
-                document.querySelector('.page-scroll').style.transition = 'opacity 0.6s, transform 0.6s';
-                document.querySelector('.page-scroll').style.opacity = '0';
-                document.querySelector('.page-scroll').style.transform = 'scale(0.9)';
-
                 requestAnimationFrame(() => outOverlay.style.opacity = '1');
-                setTimeout(() => window.location.href = destination, 800);
+                setTimeout(() => window.location.href = destination, 900);
             });
         }
     </script>
