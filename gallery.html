@@ -10,20 +10,24 @@
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
     <style>
         :root {
+            --bg: linear-gradient(180deg,#16030a,#1c0512);
+            --surface: rgba(255,255,255,0.03);
+            --text: #fff;
+            --muted: rgba(255,220,230,0.9);
             --gold: #ec4899;
             --gold-light: #fce7f3;
-            --gold-dim: rgba(236, 72, 153, 0.35);
+            --gold-dim: rgba(236, 72, 153, 0.32);
             --glass: rgba(255, 255, 255, 0.06);
-            --glass-gold: rgba(236, 72, 153, 0.15);
-            --glass-border: rgba(236, 72, 153, 0.3);
+            --glass-gold: rgba(236, 72, 153, 0.12);
+            --glass-border: rgba(236, 72, 153, 0.22);
             --text-soft: rgba(255, 220, 230, 0.9);
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: 'Cormorant Garamond', serif;
-            background: #1c0512;
-            color: #fff;
+            background: var(--bg);
+            color: var(--text);
             min-height: 100vh;
             overflow: hidden;
         }
@@ -92,7 +96,7 @@
         .hero-hint p {
             font-family: 'Aref Ruqaa', serif;
             font-size: 1.1rem;
-            color: var(--text-soft);
+            color: var(--muted);
             background: var(--glass-gold);
             border: 1px solid var(--glass-border);
             display: inline-block;
@@ -376,6 +380,9 @@
             .ctrl-btn .material-symbols-outlined { font-size: 1.5rem; }
             .page-scroll { padding-top: 60px; }
         }
+        /* Visual tweaks and focus outlines */
+        .card-front { border-radius: 1.8rem; }
+        a:focus, button:focus, .ctrl-btn:focus, .header-btn:focus { outline: 3px solid rgba(236,72,153,0.18); outline-offset: 4px; }
             /* Responsive helpers */
             img, video { max-width: 100%; height: auto; display: block; }
             .page-scroll { padding-left: 1rem; padding-right: 1rem; }
