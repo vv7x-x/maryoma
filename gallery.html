@@ -29,14 +29,11 @@
         /* Background layers */
         #bg-canvas { position: fixed; inset: 0; z-index: 0; }
         .aurora { position: fixed; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; opacity: 0.8; }
-        .aurora-layer { position: absolute; border-radius: 50%; mix-blend-mode: screen; will-change: transform; animation: drift 20s ease-in-out infinite alternate; }
+        .aurora-layer { position: absolute; border-radius: 50%; will-change: transform; animation: drift 20s ease-in-out infinite alternate; }
         .a1 { width: 80vw; height: 70vh; background: radial-gradient(ellipse, rgba(190, 24, 93, 0.5) 0%, transparent 70%); top: -20%; left: -20%; animation-duration: 25s; }
         .a2 { width: 60vw; height: 80vh; background: radial-gradient(ellipse, rgba(236, 72, 153, 0.5) 0%, transparent 70%); bottom: -20%; right: -20%; animation-duration: 18s; animation-delay: -10s; }
         .a3 { width: 50vw; height: 50vh; background: radial-gradient(ellipse, rgba(244, 114, 182, 0.3) 0%, transparent 70%); top: 20%; left: 25%; animation-duration: 15s; animation-delay: -5s; }
         @keyframes drift { 0% { transform: translate(0,0) scale(1); } 100% { transform: translate(6vw,4vh) scale(1.2); } }
-
-        .grain { position: fixed; inset: -50%; width: 200%; height: 200%; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); opacity: 0.035; pointer-events: none; z-index: 2; animation: grainAnim .5s steps(2) infinite; }
-        @keyframes grainAnim { 0%{transform:translate(0,0)} 25%{transform:translate(-2%,2%)} 50%{transform:translate(2%,-1%)} 75%{transform:translate(-1%,-2%)} 100%{transform:translate(1%,1%)} }
 
         canvas#petals { position: fixed; inset: 0; z-index: 3; pointer-events: none; }
 
@@ -133,6 +130,11 @@
         @media (max-width: 380px) { .scene { --scene-scale: 0.52; } }
         @media (max-height: 850px) { .scene { --scene-scale: 0.8; } }
         @media (max-height: 700px) { .scene { --scene-scale: 0.65; } }
+        @media (max-height: 500px) and (orientation: landscape) {
+            .scene { --scene-scale: 0.45; margin-top: -30px; }
+            .hero-hint { display: none; }
+            .controls { margin-top: -10px; }
+        }
 
         @keyframes sceneEntrance {
             0% { opacity: 0; transform: translateY(60px) scale(calc(var(--scene-scale) * 0.9)); }
@@ -190,7 +192,7 @@
             backdrop-filter: blur(20px);
             border: 1px solid rgba(236,72,153,0.3);
             box-shadow:
-                0 20px 60px rgba(0,0,0,0.5),
+                0 15px 40px rgba(0,0,0,0.5),
                 inset 0 1px 0 rgba(255,255,255,0.15),
                 inset 0 -1px 0 rgba(0,0,0,0.2),
                 0 0 0 1px rgba(0,0,0,0.2);
@@ -387,7 +389,6 @@
         <div class="aurora-layer a2"></div>
         <div class="aurora-layer a3"></div>
     </div>
-    <div class="grain"></div>
     <canvas id="petals"></canvas>
 
     <!-- Header -->
@@ -577,14 +578,18 @@
         const bgC = document.getElementById('bg-canvas');
         const bgX = bgC.getContext('2d');
         let stars = [];
+        let lastBgW = window.innerWidth;
         function resizeBg() {
             bgC.width = window.innerWidth; bgC.height = window.innerHeight;
-            stars = Array.from({length:200}, () => ({
-                x: Math.random()*bgC.width, y: Math.random()*bgC.height,
-                r: Math.random()*1.1+.2, o: Math.random()*.5+.2,
-                spd: Math.random()*.25+.04, gold: Math.random()>.55,
-                tw: Math.random()*Math.PI*2
-            }));
+            if(window.innerWidth !== lastBgW || stars.length === 0) {
+                lastBgW = window.innerWidth;
+                stars = Array.from({length:100}, () => ({ // Reduced stars for huge mobile perf
+                    x: Math.random()*bgC.width, y: Math.random()*bgC.height,
+                    r: Math.random()*1.5+.5, o: Math.random()*.5+.2,
+                    spd: Math.random()*.25+.04, gold: Math.random()>.55,
+                    tw: Math.random()*Math.PI*2
+                }));
+            }
         }
         resizeBg(); window.addEventListener('resize', resizeBg);
         (function drawBg() {
@@ -592,9 +597,8 @@
             stars.forEach(s => {
                 s.tw += .018;
                 const o = s.o * (.55 + .45*Math.sin(s.tw));
-                bgX.beginPath(); bgX.arc(s.x, s.y, s.r, 0, Math.PI*2);
                 bgX.fillStyle = s.gold ? `rgba(212,168,81,${o})` : `rgba(255,255,255,${o})`;
-                bgX.fill();
+                bgX.fillRect(s.x, s.y, s.r, s.r); // Using fillRect avoids massive math overhead per frame
                 s.y -= s.spd; if(s.y<0){s.y=bgC.height; s.x=Math.random()*bgC.width;}
             });
             requestAnimationFrame(drawBg);
