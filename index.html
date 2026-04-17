@@ -2,7 +2,7 @@
 <html lang="ar" dir="ltr">
 <head>
     <meta charset="utf-8"/>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <meta content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" name="viewport"/>
     <title>Mariam's World ✦</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌹</text></svg>">
     <meta name="theme-color" content="#2a0416">
@@ -10,17 +10,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
     <style>
         :root {
-            --gold: #ec4899; /* Pink-500 */
-            --gold-light: #fdf2f8; /* Pink-50 */
-            --gold-dim: rgba(236, 72, 153, 0.35);
-            --crimson: #be185d; /* Pink-700 */
-            --rose-deep: #831843; /* Pink-900 */
-            --blush: rgba(255, 192, 203, 0.8);
-            --glass: rgba(255, 255, 255, 0.07);
-            --glass-border: rgba(236, 72, 153, 0.3);
-            }
-        
-            /* New theme variables */
             --bg: linear-gradient(180deg,#16030a,#2a0416);
             --surface: rgba(255,255,255,0.03);
             --text: #fff;
@@ -32,12 +21,14 @@
             --rose-deep: #831843;
             --glass: rgba(255, 255, 255, 0.06);
             --glass-border: rgba(236, 72, 153, 0.22);
+        }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body, html {
             font-family: 'Cormorant Garamond', serif;
             min-height: 100vh;
+            min-height: 100dvh;
             width: 100%;
             overflow-x: hidden;
             overflow-y: auto;
@@ -46,6 +37,12 @@
             justify-content: center;
             background: var(--bg);
             color: var(--text);
+            /* Safe area padding */
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+            padding-left: env(safe-area-inset-left);
+            padding-right: env(safe-area-inset-right);
+            -webkit-overflow-scrolling: touch;
         }
 
         /* Canvas Background */
@@ -110,6 +107,8 @@
             gap: 0;
             opacity: 0;
             animation: pageReveal 2s cubic-bezier(0.16, 1, 0.3, 1) 0.5s forwards;
+            width: 100%;
+            max-width: 1100px;
         }
         @keyframes pageReveal {
             from { opacity: 0; transform: translateY(30px); }
@@ -146,6 +145,9 @@
             display: flex; align-items: center; justify-content: center;
             transform: scale(var(--p-scale));
             border-radius: 50%;
+            will-change: transform;
+            transform-style: preserve-3d;
+            backface-visibility: hidden;
         }
 
         /* Multiple spinning rings */
@@ -440,10 +442,9 @@
         }
             /* Responsive helpers */
             img, video { max-width: 100%; height: auto; display: block; }
-            main { max-width: 1100px; width: 100%; box-sizing: border-box; }
             @media (max-width: 800px) {
-                body { align-items: flex-start; padding-top: 20px; }
-                main { padding: 1rem; }
+                body { align-items: center; padding-top: 0; }
+                main { padding: 1.5rem 1rem; }
                 .portrait-frame { width: 160px; height: 160px; }
                 .ring-1, .ring-2, .ring-3 { display: none; }
                 .aurora-layer { opacity: 0.6; }

@@ -2,7 +2,7 @@
 <html lang="ar" dir="ltr">
 <head>
     <meta charset="utf-8"/>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <meta content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" name="viewport"/>
     <title>Mariam's Room ✦</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌹</text></svg>">
     <meta name="theme-color" content="#1c0512">
@@ -29,7 +29,10 @@
             background: var(--bg);
             color: var(--text);
             min-height: 100vh;
-            overflow: hidden;
+            min-height: 100dvh;
+            overflow-x: hidden;
+            overflow-y: hidden; /* Scroll handled by .page-scroll */
+            position: relative;
         }
 
         /* Background layers */
@@ -47,10 +50,12 @@
         header {
             position: fixed; top: 0; width: 100%; z-index: 50;
             display: flex; justify-content: space-between; align-items: center;
-            padding: 1rem 2rem;
+            padding: calc(1rem + env(safe-area-inset-top)) 2rem 1rem 2rem;
             background: rgba(7,0,15,0.4);
             backdrop-filter: blur(20px);
             border-bottom: 1px solid var(--glass-border);
+            padding-left: calc(2rem + env(safe-area-inset-left));
+            padding-right: calc(2rem + env(safe-area-inset-right));
         }
         .logo {
             font-family: 'Playfair Display', serif;
@@ -79,9 +84,19 @@
         /* Scroll container */
         .page-scroll {
             position: relative; z-index: 10;
-            height: 100vh; overflow-y: auto; overflow-x: hidden;
-            padding-top: 80px; padding-bottom: 40px;
+            height: 100vh;
+            height: 100dvh; 
+            overflow-y: auto; overflow-x: hidden;
+            padding-top: calc(85px + env(safe-area-inset-top)); 
+            padding-bottom: calc(40px + env(safe-area-inset-bottom));
+            padding-left: env(safe-area-inset-left);
+            padding-right: env(safe-area-inset-right);
             scroll-behavior: smooth;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start; /* Start from top, but hero ensures visual center */
+            -webkit-overflow-scrolling: touch;
         }
         .page-scroll::-webkit-scrollbar { width: 4px; }
         .page-scroll::-webkit-scrollbar-track { background: transparent; }
@@ -107,6 +122,7 @@
             box-shadow: 0 5px 30px rgba(0,0,0,0.4);
             will-change: transform;
             direction: rtl;
+            max-width: 90vw; /* Prevent overflow on very narrow screens */
         }
         .hero-hint .avatar {
             width: 60px; height: 60px;
@@ -122,24 +138,28 @@
         .scene {
             --scene-scale: 1;
             width: 300px; height: 460px;
-            perspective: 2200px;
+            perspective: 2000px; /* Adjusted for better projection on small screens */
             margin: 0 auto;
             position: relative; z-index: 20;
             cursor: grab;
             touch-action: none;
             opacity: 0;
             animation: sceneEntrance 1.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.3s forwards;
+            /* Hardware acceleration */
+            transform: translate3d(0,0,0);
+            -webkit-transform-style: preserve-3d;
+            transform-style: preserve-3d;
         }
-        @media (max-width: 1024px) { .scene { --scene-scale: 0.9; } }
+        @media (max-width: 1024px) { .scene { --scene-scale: 0.85; } }
         @media (max-width: 768px) { .scene { --scene-scale: 0.75; } }
         @media (max-width: 480px) { .scene { --scene-scale: 0.6; } }
         @media (max-width: 380px) { .scene { --scene-scale: 0.52; } }
-        @media (max-height: 850px) { .scene { --scene-scale: 0.8; } }
+        @media (max-height: 850px) { .scene { --scene-scale: 0.75; } }
         @media (max-height: 700px) { .scene { --scene-scale: 0.65; } }
         @media (max-height: 500px) and (orientation: landscape) {
-            .scene { --scene-scale: 0.45; margin-top: -30px; }
+            .scene { --scene-scale: 0.45; margin-top: -20px; }
             .hero-hint { display: none; }
-            .controls { margin-top: -10px; }
+            .controls { margin-top: -5px; }
         }
 
         @keyframes sceneEntrance {
@@ -151,10 +171,13 @@
         .carousel {
             width: 100%; height: 100%;
             position: absolute;
+            -webkit-transform-style: preserve-3d;
             transform-style: preserve-3d;
             transform: translateZ(-480px) rotateY(0deg);
             will-change: transform;
             transition: transform .6s cubic-bezier(.25,.8,.25,1);
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
         }
 
         /* Cards */
@@ -162,22 +185,28 @@
             position: absolute;
             width: 300px; height: 460px;
             left: 0; top: 0;
+            -webkit-transform-style: preserve-3d;
             transform-style: preserve-3d;
             user-select: none;
+            will-change: transform;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
         }
-        .flip-card:nth-child(1) { transform: rotateY(0deg) translateZ(480px); }
-        .flip-card:nth-child(2) { transform: rotateY(60deg) translateZ(480px); }
-        .flip-card:nth-child(3) { transform: rotateY(120deg) translateZ(480px); }
-        .flip-card:nth-child(4) { transform: rotateY(180deg) translateZ(480px); }
-        .flip-card:nth-child(5) { transform: rotateY(240deg) translateZ(480px); }
-        .flip-card:nth-child(6) { transform: rotateY(300deg) translateZ(480px); }
+        .flip-card:nth-child(1) { transform: rotateY(0deg) translateZ(480px) translate3d(0,0,0); }
+        .flip-card:nth-child(2) { transform: rotateY(60deg) translateZ(480px) translate3d(0,0,0); }
+        .flip-card:nth-child(3) { transform: rotateY(120deg) translateZ(480px) translate3d(0,0,0); }
+        .flip-card:nth-child(4) { transform: rotateY(180deg) translateZ(480px) translate3d(0,0,0); }
+        .flip-card:nth-child(5) { transform: rotateY(240deg) translateZ(480px) translate3d(0,0,0); }
+        .flip-card:nth-child(6) { transform: rotateY(300deg) translateZ(480px) translate3d(0,0,0); }
 
         .flip-card-inner {
             position: relative; width: 100%; height: 100%;
             text-align: center;
             transition: transform .9s cubic-bezier(.175,.885,.32,1.275);
+            -webkit-transform-style: preserve-3d;
             transform-style: preserve-3d;
             pointer-events: none;
+            will-change: transform;
         }
         .flip-card { pointer-events: auto; }
         .flip-card.flipped .flip-card-inner { transform: rotateY(180deg); }
@@ -186,11 +215,14 @@
         .card-front, .card-back {
             position: absolute; width: 100%; height: 100%;
             border-radius: 1.8rem;
+            -webkit-backface-visibility: hidden;
             backface-visibility: hidden;
             overflow: hidden;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             padding: 1.2rem;
             pointer-events: auto;
+            /* Force GPU layer */
+            transform: translate3d(0,0,0);
         }
 
         .card-front {
@@ -378,7 +410,7 @@
             .controls { gap: 2rem; margin-top: .5rem; }
             .ctrl-btn { width: 50px; height: 50px; }
             .ctrl-btn .material-symbols-outlined { font-size: 1.5rem; }
-            .page-scroll { padding-top: 60px; }
+            .page-scroll { padding-top: calc(90px + env(safe-area-inset-top)); }
         }
         /* Visual tweaks and focus outlines */
         .card-front { border-radius: 1.8rem; }
