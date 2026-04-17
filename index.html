@@ -25,24 +25,29 @@
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        body, html {
-            font-family: 'Cormorant Garamond', serif;
-            min-height: 100vh;
-            min-height: 100dvh;
+        html, body {
             width: 100%;
+            height: 100dvh;
             overflow-x: hidden;
-            overflow-y: auto;
+            background: var(--bg);
+            -webkit_text-size-adjust: 100%;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Cormorant Garamond', serif;
+            color: var(--text);
+            min-height: 100dvh;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: var(--bg);
-            color: var(--text);
             /* Safe area padding */
             padding-top: env(safe-area-inset-top);
             padding-bottom: env(safe-area-inset-bottom);
             padding-left: env(safe-area-inset-left);
             padding-right: env(safe-area-inset-right);
             -webkit-overflow-scrolling: touch;
+            overflow-y: auto;
         }
 
         /* Canvas Background */
@@ -50,6 +55,7 @@
             position: fixed;
             inset: 0;
             z-index: 0;
+            pointer-events: none;
         }
 
         /* Aurora layers */
@@ -137,6 +143,7 @@
             .portrait-wrap { --p-scale: 0.35; margin-bottom: 0; } 
             h1 { font-size: 2rem !important; }
             .cta-btn { padding: 0.6rem 1.5rem; font-size: 1rem; margin-bottom: 2rem; }
+            .subtitle-en { margin-bottom: 0.5rem; }
         }
         
         .portrait-inner {
@@ -146,8 +153,10 @@
             transform: scale(var(--p-scale));
             border-radius: 50%;
             will-change: transform;
+            -webkit-transform-style: preserve-3d;
             transform-style: preserve-3d;
             backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
         }
 
         /* Multiple spinning rings */
@@ -448,7 +457,7 @@
                 .portrait-frame { width: 160px; height: 160px; }
                 .ring-1, .ring-2, .ring-3 { display: none; }
                 .aurora-layer { opacity: 0.6; }
-                canvas#petals, #bg-canvas { display: none; }
+                canvas#petals-canvas, #bg-canvas { opacity: 0.4; }
             }
             @media (prefers-reduced-motion: reduce) {
                 .ring, .aurora-layer, .portrait-halo, .gem { animation: none !important; transition: none !important; }

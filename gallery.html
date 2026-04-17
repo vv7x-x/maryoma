@@ -24,19 +24,25 @@
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
+        html, body {
+            width: 100%;
+            height: 100dvh;
+            overflow-x: hidden;
+            background: var(--bg);
+            -webkit-text-size-adjust: 100%;
+            -webkit-tap-highlight-color: transparent;
+        }
+
         body {
             font-family: 'Cormorant Garamond', serif;
-            background: var(--bg);
             color: var(--text);
-            min-height: 100vh;
             min-height: 100dvh;
-            overflow-x: hidden;
-            overflow-y: hidden; /* Scroll handled by .page-scroll */
+            overflow-y: hidden; /* Main scroll handled by .page-scroll */
             position: relative;
         }
 
         /* Background layers */
-        #bg-canvas { position: fixed; inset: 0; z-index: 0; }
+        #bg-canvas { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
         .aurora { position: fixed; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; opacity: 0.8; }
         .aurora-layer { position: absolute; border-radius: 50%; will-change: transform; animation: drift 20s ease-in-out infinite alternate; }
         .a1 { width: 80vw; height: 70vh; background: radial-gradient(ellipse, rgba(190, 24, 93, 0.5) 0%, transparent 70%); top: -20%; left: -20%; animation-duration: 25s; }
@@ -81,22 +87,36 @@
         .header-btn:hover { background: rgba(212,168,81,0.2); transform: scale(1.1); box-shadow: 0 0 20px var(--gold-dim); }
         .header-btn .material-symbols-outlined { font-size: 1.3rem; font-variation-settings: 'FILL' 1; }
 
-        /* Scroll container */
+        /* Scroll container - Refactored for perfect centering */
         .page-scroll {
-            position: relative; z-index: 10;
-            height: 100vh;
+            position: relative; 
+            z-index: 10;
+            width: 100%;
             height: 100dvh; 
-            overflow-y: auto; overflow-x: hidden;
+            overflow-y: auto; 
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start; /* Default start, but we use a spacer for centering */
             padding-top: calc(85px + env(safe-area-inset-top)); 
             padding-bottom: calc(40px + env(safe-area-inset-bottom));
             padding-left: env(safe-area-inset-left);
             padding-right: env(safe-area-inset-right);
+            -webkit-overflow-scrolling: touch;
             scroll-behavior: smooth;
+        }
+
+        /* Essential centering spacer for WebViews */
+        .content-wrapper {
+            width: 100%;
+            min-height: calc(100dvh - 85px - env(safe-area-inset-top) - 40px - env(safe-area-inset-bottom));
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: flex-start; /* Start from top, but hero ensures visual center */
-            -webkit-overflow-scrolling: touch;
+            justify-content: center; /* This ensures perfect vertical centering */
+            padding: 1rem 0;
+            will-change: transform;
         }
         .page-scroll::-webkit-scrollbar { width: 4px; }
         .page-scroll::-webkit-scrollbar-track { background: transparent; }
@@ -137,29 +157,39 @@
         /* 3D Carousel Scene */
         .scene {
             --scene-scale: 1;
-            width: 300px; height: 460px;
-            perspective: 2000px; /* Adjusted for better projection on small screens */
-            margin: 0 auto;
-            position: relative; z-index: 20;
+            width: 300px; 
+            height: 460px;
+            perspective: 2000px;
+            margin: 2rem auto;
+            position: relative; 
+            z-index: 20;
             cursor: grab;
             touch-action: none;
             opacity: 0;
             animation: sceneEntrance 1.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.3s forwards;
-            /* Hardware acceleration */
+            
+            /* Enhanced 3D Stability */
             transform: translate3d(0,0,0);
             -webkit-transform-style: preserve-3d;
             transform-style: preserve-3d;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            will-change: transform;
         }
         @media (max-width: 1024px) { .scene { --scene-scale: 0.85; } }
-        @media (max-width: 768px) { .scene { --scene-scale: 0.75; } }
-        @media (max-width: 480px) { .scene { --scene-scale: 0.6; } }
-        @media (max-width: 380px) { .scene { --scene-scale: 0.52; } }
-        @media (max-height: 850px) { .scene { --scene-scale: 0.75; } }
-        @media (max-height: 700px) { .scene { --scene-scale: 0.65; } }
+        @media (max-width: 768px) { .scene { --scene-scale: 0.72; } }
+        @media (max-width: 480px) { .scene { --scene-scale: 0.58; } }
+        @media (max-width: 380px) { .scene { --scene-scale: 0.48; } }
+        @media (max-width: 320px) { .scene { --scene-scale: 0.42; } }
+        
+        @media (max-height: 850px) { .scene { --scene-scale: min(var(--scene-scale), 0.75); } }
+        @media (max-height: 700px) { .scene { --scene-scale: min(var(--scene-scale), 0.62); } }
+        @media (max-height: 600px) { .scene { --scene-scale: min(var(--scene-scale), 0.5); } }
+        
         @media (max-height: 500px) and (orientation: landscape) {
-            .scene { --scene-scale: 0.45; margin-top: -20px; }
+            .scene { --scene-scale: 0.4; margin-top: 0; }
             .hero-hint { display: none; }
-            .controls { margin-top: -5px; }
+            .controls { margin-top: 0; }
         }
 
         @keyframes sceneEntrance {
@@ -176,8 +206,11 @@
             transform: translateZ(-480px) rotateY(0deg);
             will-change: transform;
             transition: transform .6s cubic-bezier(.25,.8,.25,1);
+            
+            /* Fix for WebView clipping */
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
+            image-rendering: -webkit-optimize-contrast;
         }
 
         /* Cards */
@@ -191,6 +224,8 @@
             will-change: transform;
             -webkit-backface-visibility: hidden;
             backface-visibility: hidden;
+            /* Critical for depth perception on some browsers */
+            transform-origin: center center;
         }
         .flip-card:nth-child(1) { transform: rotateY(0deg) translateZ(480px) translate3d(0,0,0); }
         .flip-card:nth-child(2) { transform: rotateY(60deg) translateZ(480px) translate3d(0,0,0); }
@@ -221,8 +256,9 @@
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             padding: 1.2rem;
             pointer-events: auto;
-            /* Force GPU layer */
+            /* Force GPU layer with combined property */
             transform: translate3d(0,0,0);
+            -webkit-transform: translate3d(0,0,0);
         }
 
         .card-front {
@@ -418,13 +454,13 @@
             /* Responsive helpers */
             img, video { max-width: 100%; height: auto; display: block; }
             .page-scroll { padding-left: 1rem; padding-right: 1rem; }
-            @media (max-width: 800px) {
-                header { padding: .6rem 1rem; }
-                .scene { width: 240px; height: 380px; }
-                .flip-card { width: 240px; height: 380px; }
-                .controls { gap: 1rem; }
-                .hero-hint p { padding: .5rem 1rem; font-size: .95rem; }
-                canvas#petals, #bg-canvas { display: none; }
+            @media (max-width: 480px) {
+                header { padding: .6rem 1rem; padding-top: calc(.6rem + env(safe-area-inset-top)); }
+                .scene { width: 280px; height: 420px; }
+                .flip-card { width: 280px; height: 420px; }
+                .controls { gap: 1.5rem; }
+                .hero-hint p { padding: .5rem 1.5rem; font-size: 0.9rem; }
+                canvas#petals, #bg-canvas { opacity: 0.4; } /* Keep them but subtle for perf */
             }
             @media (prefers-reduced-motion: reduce) {
                 .scene, .carousel, .flip-card, .aurora-layer, #petals { animation: none !important; transition: none !important; }
@@ -476,17 +512,18 @@
     <!-- Scrollable page -->
     <div class="page-scroll">
         <!-- Hero hint -->
-        <div class="hero-hint" style="opacity:0; animation: sceneEntrance 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;">
-            <div class="avatar">
-                <img src="mariam3.jpg" loading="lazy" decoding="async" alt="صورة مريم - الأفاتار" onerror="this.style.background='linear-gradient(135deg,#8b0a2a,#d4a851)'; this.style.opacity='.5'"/>
+        <div class="content-wrapper">
+            <div class="hero-hint" style="opacity:0; animation: sceneEntrance 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;">
+                <div class="avatar">
+                    <img src="mariam3.jpg" loading="lazy" decoding="async" alt="صورة مريم - الأفاتار" onerror="this.style.background='linear-gradient(135deg,#8b0a2a,#d4a851)'; this.style.opacity='.5'"/>
+                </div>
+                <p style="position:relative;">اسحبي بأصبعك لتحريك الصور.. ثم انقري 🌸
+                    <span class="material-symbols-outlined" style="position:absolute; top:-12px; right:-12px; color:var(--gold-light); animation: pulse 2s infinite; text-shadow: 0 0 10px var(--gold);">auto_awesome</span>
+                </p>
             </div>
-            <p style="position:relative;">اسحبي بأصبعك لتحريك الصور.. ثم انقري 🌸
-                <span class="material-symbols-outlined" style="position:absolute; top:-12px; right:-12px; color:var(--gold-light); animation: pulse 2s infinite; text-shadow: 0 0 10px var(--gold);">auto_awesome</span>
-            </p>
-        </div>
 
-        <!-- 3D Carousel -->
-        <div class="scene" id="carousel-scene">
+            <!-- 3D Carousel -->
+            <div class="scene" id="carousel-scene">
             <div class="carousel" id="carousel-spinner">
 
                 <!-- Card 1 -->
@@ -628,14 +665,15 @@
             <div class="dot"></div>
         </div>
 
-        <!-- Controls -->
-        <div class="controls">
-            <button class="ctrl-btn" onclick="rotateLeft()">
-                <span class="material-symbols-outlined">arrow_forward</span>
-            </button>
-            <button class="ctrl-btn" onclick="rotateRight()">
-                <span class="material-symbols-outlined">arrow_back</span>
-            </button>
+            <!-- Controls -->
+            <div class="controls">
+                <button class="ctrl-btn" onclick="rotateLeft()">
+                    <span class="material-symbols-outlined">arrow_forward</span>
+                </button>
+                <button class="ctrl-btn" onclick="rotateRight()">
+                    <span class="material-symbols-outlined">arrow_back</span>
+                </button>
+            </div>
         </div>
     </div>
 
@@ -841,9 +879,15 @@
                 overlay.classList.add('active');
                 overlay.setAttribute('aria-hidden','false');
                 document.body.style.overflow = 'hidden';
+                document.querySelector('.page-scroll').style.overflow = 'hidden';
                 el.focus?.();
             }
-            function close(){ overlay.classList.remove('active'); overlay.setAttribute('aria-hidden','true'); document.body.style.overflow = ''; }
+            function close(){ 
+                overlay.classList.remove('active'); 
+                overlay.setAttribute('aria-hidden','true'); 
+                document.body.style.overflow = ''; 
+                document.querySelector('.page-scroll').style.overflow = 'auto';
+            }
             function prev(){ open((idx-1+imgs.length)%imgs.length); }
             function next(){ open((idx+1)%imgs.length); }
 
