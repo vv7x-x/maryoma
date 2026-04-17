@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="ar" dir="ltr">
+<head>
+    <meta charset="utf-8"/>
+    <!--
+      FIX #1 — viewport: Added 'interactive-widget=resizes-content' to prevent
+      the virtual keyboard or Instagram's toolbar from causing layout shifts.
+      'viewport-fit=cover' ensures the safe-area insets work on notched devices.
+    -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no, interactive-widget=resizes-content"/>
+    <title>Mariam's Room ✦</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌹</text></svg>">
+    <meta name="theme-color" content="#1c0512">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Aref+Ruqaa:wght@400;700&family=Amiri:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <style>
+        :root {
+            --bg: linear-gradient(180deg,#16030a,#1c0512);
+            --surface: rgba(255,255,255,0.03);
+            --text: #fff;
+            --muted: rgba(255,220,230,0.9);
+            --gold: #ec4899;
+            --gold-light: #fce7f3;
+            --gold-dim: rgba(236, 72, 153, 0.32);
+            --glass: rgba(255, 255, 255, 0.06);
+            --glass-gold: rgba(236, 72, 153, 0.12);
+            --glass-border: rgba(236, 72, 153, 0.22);
+            --text-soft: rgba(255, 220, 230, 0.9);
+            /*
+              FIX #2 — Dynamic header height as a CSS variable so everything
+              below can reference it without hardcoding "85px" everywhere.
+              JS will update this on resize.
+            */
+            --header-h: 70px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        /*
+          FIX #3 — Viewport height.
+          Instagram's in-app browser and many WebViews report 100vh incorrectly
+          (it includes the browser chrome). We cascade:
+          1. 100vh  (universal fallback)
+          2. 100dvh (modern browsers + Chrome WebView 108+)
+          3. -webkit-fill-available (iOS Safari, WKWebView)
+          Applied on #app-shell which IS the full-screen container.
+        */
+        html {
+            height: 100%;
+            height: -webkit-fill-available;
+            overflow: hidden; /* prevent body-level bounce/scroll */
+        }
+
+        body {
+            font-family: 'Cormorant Garamond', serif;
+            color: var(--text);
+            /*
+              FIX #4 — Body uses flex-column layout.
+              This REPLACES the old "position:fixed header + scrollable body" pattern
+              which is the #1 cause of layout breakage in Instagram browser and
+              Android WebView. Fixed positioning in embedded WebViews is unreliable
+              because the browser doesn't have a stable viewport origin.
+            */
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            height: 100dvh;
+            height: -webkit-fill-available;
+            max-height: 100vh;
+            max-height: 100dvh;
+            overflow: hidden;
+            position: relative;
+            width: 100%;
+            max-width: 100vw;
+            /* Prevent horizontal overflow globally */
+            overflow-x: hidden;
+            background: var(--bg);
+            -webkit-text-size-adjust: 100%;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* ── Background layers (position:fixed is safe here because they are
+           purely decorative and don't affect layout) ── */
+        #bg-canvas { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+        .aurora { position: fixed; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; opacity: 0.8; }
+        .aurora-layer { position: absolute; border-radius: 50%; will-change: transform; animation: drift 20s ease-in-out infinite alternate; }
+        .a1 { width: 80vw; height: 70vh; background: radial-gradient(ellipse, rgba(190, 24, 93, 0.5) 0%, transparent 70%); top: -20%; left: -20%; animation-duration: 25s; }
+        .a2 { width: 60vw; height: 80vh; background: radial-gradient(ellipse, rgba(236, 72, 153, 0.5) 0%, transparent 70%); bottom: -20%; right: -20%; animation-duration: 18s; animation-delay: -10s; }
+        .a3 { width: 50vw; height: 50vh; background: radial-gradient(ellipse, rgba(244, 114, 182, 0.3) 0%, transparent 70%); top: 20%; left: 25%; animation-duration: 15s; animation-delay: -5s; }
+        @keyframes drift { 0% { transform: translate(0,0) scale(1); } 100% { transform: translate(6vw,4vh) scale(1.2); } }
+
+        canvas#petals { position: fixed; inset: 0; z-index: 3; pointer-events: none; }
+
+        /* ──────────────────────────────────────────────────────────────────
+           FIX #5 — HEADER: Changed from position:fixed to flex-shrink:0
+           This is the most impactful fix. In Instagram's browser the
+           viewport origin shifts when toolbars appear/disappear, making
+           fixed elements jump. Using the flex-column architecture on body
+           means the header is always at the top naturally, no JS, no fixed.
+           ────────────────────────────────────────────────────────────────── */
+        header {
+            flex-shrink: 0;        /* Never shrink within body flex column */
+            width: 100%;
+            z-index: 50;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            /* Use padding instead of height so it absorbs safe-area on notched phones */
+            padding-top: max(1rem, calc(0.6rem + env(safe-area-inset-top)));
+            padding-bottom: 0.8rem;
+            padding-left: max(2rem, calc(1rem + env(safe-area-inset-left)));
+            padding-right: max(2rem, calc(1rem + env(safe-area-inset-right)));
+            background: rgba(7,0,15,0.5);
+            /* backdrop-filter fallback: darker bg covers it if unsupported */
+            -webkit-backdrop-filter: blur(20px);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            position: relative; /* taken out of fixed flow */
+            z-index: 50;
+        }
+
+        .logo {
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            font-size: 1.5rem;
+            color: var(--gold-light);
+            display: flex; align-items: center; gap: .5rem;
+            text-shadow: 0 0 30px rgba(212,168,81,0.4);
+        }
+        .logo .material-symbols-outlined { font-size: 1.2rem; font-variation-settings: 'FILL' 1; color: var(--gold); animation: pulse 2s ease-in-out infinite; }
+        @keyframes pulse { 0%,100%{opacity:.6} 50%{opacity:1} }
+
+        .header-btn {
+            width: 44px; height: 44px;
+            background: var(--glass-gold);
+            border: 1px solid var(--glass-border);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--gold-light);
+            transition: all .3s;
+            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .header-btn:hover { background: rgba(212,168,81,0.2); transform: scale(1.1); box-shadow: 0 0 20px var(--gold-dim); }
+        .header-btn .material-symbols-outlined { font-size: 1.3rem; font-variation-settings: 'FILL' 1; }
+
+        /* ──────────────────────────────────────────────────────────────────
+           FIX #6 — SCROLL CONTAINER: flex:1 replaces height:100dvh padding trick.
+           The container takes all remaining space after the header, which is
+           exact and reliable across all WebView implementations.
+           ────────────────────────────────────────────────────────────────── */
+        .page-scroll {
+            flex: 1;               /* Fills remaining body height after header */
+            min-height: 0;         /* CRITICAL: allows flex child to shrink below content size */
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            overflow-y: auto;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-bottom: max(2rem, env(safe-area-inset-bottom));
+            -webkit-overflow-scrolling: touch;
+            /* Prevent overscroll from causing layout issues in WebView */
+            overscroll-behavior-y: contain;
+        }
+        .page-scroll::-webkit-scrollbar { width: 3px; }
+        .page-scroll::-webkit-scrollbar-track { background: transparent; }
+        .page-scroll::-webkit-scrollbar-thumb { background: var(--gold-dim); border-radius: 2px; }
+
+        /* ──────────────────────────────────────────────────────────────────
+           FIX #7 — CONTENT WRAPPER: Uses flex centering properly.
+           min-height: 100% ensures it fills .page-scroll even when content
+           is short, which keeps the carousel visually centered.
+           ────────────────────────────────────────────────────────────────── */
+        .content-wrapper {
+            width: 100%;
+            min-height: 100%;       /* Fill full scroll area so centering works */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem 1rem;
+            gap: 0;
+        }
+
+        /* Hero hint */
+        .hero-hint {
+            text-align: center;
+            margin-bottom: 0.8rem;
+            padding: 0 1rem;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .hero-hint p {
+            font-family: 'Aref Ruqaa', serif;
+            font-size: 1.1rem;
+            color: var(--muted);
+            background: var(--glass-gold);
+            border: 1px solid var(--glass-border);
+            display: inline-block;
+            padding: .6rem 2rem;
+            border-radius: 100px;
+            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 5px 30px rgba(0,0,0,0.4);
+            direction: rtl;
+            max-width: 90vw;
+            position: relative;
+        }
+        .hero-hint .avatar {
+            width: 60px; height: 60px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 2px solid var(--gold);
+            margin: 0 auto 1rem;
+            box-shadow: 0 0 30px var(--gold-dim);
+        }
+        .hero-hint .avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* ──────────────────────────────────────────────────────────────────
+           FIX #8 — 3D SCENE: Removed CSS custom property from @keyframes.
+           CSS variables inside @keyframes are NOT computed at animation runtime
+           in Android WebView < 114 and all Instagram/Facebook in-app browsers.
+           The animation now uses a neutral transform; JS applies the real scale.
+           Also: removed will-change:transform from scene itself (it breaks the
+           stacking context needed for 3D perspective in some WebViews).
+           ────────────────────────────────────────────────────────────────── */
+        .scene {
+            width: 300px;
+            height: 460px;
+            /*
+              perspective MUST be on the direct parent of the 3D element.
+              Having it here (on .scene, parent of .carousel) is correct.
+              Do NOT add perspective to .carousel itself.
+            */
+            perspective: 2000px;
+            -webkit-perspective: 2000px;
+            margin: 1rem auto;
+            position: relative;
+            z-index: 20;
+            cursor: grab;
+            touch-action: none;     /* Prevents browser from hijacking touch for scroll */
+            /* No will-change here — it creates a new stacking context that
+               breaks perspective in Chrome WebView */
+            /* Scale is controlled entirely by JS via transform, not CSS var */
+            transform-origin: center center;
+            opacity: 0; /* JS will animate this in */
+        }
+        .scene:active { cursor: grabbing; }
+
+        /* ──────────────────────────────────────────────────────────────────
+           FIX #9 — CAROUSEL 3D CONTEXT:
+           -webkit- prefixes added explicitly for WebKit-based WebViews.
+           'isolation: isolate' removed from 3D containers — it breaks the
+           stacking context needed for perspective to propagate.
+           ────────────────────────────────────────────────────────────────── */
+        .carousel {
+            width: 100%; height: 100%;
+            position: absolute;
+            top: 0; left: 0;
+            -webkit-transform-style: preserve-3d;
+            transform-style: preserve-3d;
+            transform: translateZ(-480px) rotateY(0deg);
+            -webkit-transform: translateZ(-480px) rotateY(0deg);
+            transition: transform .6s cubic-bezier(.25,.8,.25,1);
+            -webkit-transition: -webkit-transform .6s cubic-bezier(.25,.8,.25,1);
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+        }
+
+        /* Cards */
+        .flip-card {
+            position: absolute;
+            width: 300px; height: 460px;
+            left: 0; top: 0;
+            -webkit-transform-style: preserve-3d;
+            transform-style: preserve-3d;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            transform-origin: center center;
+            cursor: pointer;
+        }
+
+        /*
+          FIX #10 — Card translateZ values use translate3d(0,0,0) at end
+          to force GPU compositing on each card independently.
+          This prevents "card disappears" bugs in WebView.
+        */
+        .flip-card:nth-child(1) { transform: rotateY(0deg)   translateZ(480px); -webkit-transform: rotateY(0deg)   translateZ(480px); }
+        .flip-card:nth-child(2) { transform: rotateY(60deg)  translateZ(480px); -webkit-transform: rotateY(60deg)  translateZ(480px); }
+        .flip-card:nth-child(3) { transform: rotateY(120deg) translateZ(480px); -webkit-transform: rotateY(120deg) translateZ(480px); }
+        .flip-card:nth-child(4) { transform: rotateY(180deg) translateZ(480px); -webkit-transform: rotateY(180deg) translateZ(480px); }
+        .flip-card:nth-child(5) { transform: rotateY(240deg) translateZ(480px); -webkit-transform: rotateY(240deg) translateZ(480px); }
+        .flip-card:nth-child(6) { transform: rotateY(300deg) translateZ(480px); -webkit-transform: rotateY(300deg) translateZ(480px); }
+
+        .flip-card-inner {
+            position: relative; width: 100%; height: 100%;
+            text-align: center;
+            transition: transform .9s cubic-bezier(.175,.885,.32,1.275);
+            -webkit-transition: -webkit-transform .9s cubic-bezier(.175,.885,.32,1.275);
+            -webkit-transform-style: preserve-3d;
+            transform-style: preserve-3d;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+        }
+        .flip-card.flipped .flip-card-inner {
+            transform: rotateY(180deg);
+            -webkit-transform: rotateY(180deg);
+        }
+
+        /* Card faces */
+        .card-front, .card-back {
+            position: absolute; width: 100%; height: 100%;
+            border-radius: 1.8rem;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            overflow: hidden;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 1.2rem;
+            /* Force GPU layer */
+            -webkit-transform: translate3d(0,0,0);
+            transform: translate3d(0,0,0);
+        }
+
+        .card-front {
+            background: linear-gradient(145deg, rgba(255,255,255,0.1) 0%, rgba(236,72,153,0.1) 50%, rgba(255,255,255,0.05) 100%);
+            /* Fallback for WebViews that don't support backdrop-filter */
+            background-color: rgba(30, 5, 20, 0.75);
+            -webkit-backdrop-filter: blur(20px);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(236,72,153,0.3);
+            box-shadow:
+                0 15px 40px rgba(0,0,0,0.5),
+                inset 0 1px 0 rgba(255,255,255,0.15),
+                inset 0 -1px 0 rgba(0,0,0,0.2);
+        }
+        .card-front::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 60%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(212,168,81,0.08), transparent);
+            transform: skewX(-20deg);
+            animation: cardShimmer 6s ease-in-out infinite;
+            pointer-events: none;
+        }
+        @keyframes cardShimmer {
+            0%,100% { left: -100%; }
+            50% { left: 150%; }
+        }
+
+        .card-back {
+            background: linear-gradient(135deg, rgba(131,24,67,0.9) 0%, rgba(80,7,36,0.97) 100%);
+            border: 1px solid rgba(236,72,153,0.3);
+            -webkit-transform: rotateY(180deg) translate3d(0,0,0);
+            transform: rotateY(180deg) translate3d(0,0,0);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6), inset 0 0 80px rgba(0,0,0,0.4);
+        }
+        .card-back::before {
+            content: '';
+            position: absolute;
+            inset: 12px;
+            border: 1px solid rgba(212,168,81,0.15);
+            border-radius: 1.4rem;
+            pointer-events: none;
+        }
+
+        /* Photo container */
+        .photo-wrap {
+            width: 100%;
+            height: 62%;
+            border-radius: 1.3rem;
+            overflow: hidden;
+            margin-bottom: 1rem;
+            position: relative;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(212,168,81,0.2);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.4), inset 0 0 20px rgba(0,0,0,0.2);
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .photo-wrap img {
+            position: absolute;
+            width: 100%; height: 100%;
+            object-fit: cover;
+            transition: transform 1s ease;
+            /* Prevent image drag which interferes with carousel drag */
+            -webkit-user-drag: none;
+            user-drag: none;
+            pointer-events: none;
+        }
+        .flip-card:hover .photo-wrap img { transform: scale(1.04); }
+        .photo-wrap .placeholder {
+            font-family: 'Aref Ruqaa', serif;
+            color: rgba(212,168,81,0.4);
+            font-size: .9rem;
+            z-index: 0;
+        }
+
+        /* Card front text */
+        .card-title {
+            font-family: 'Aref Ruqaa', serif;
+            font-size: 1.5rem;
+            color: var(--gold-light);
+            direction: rtl;
+            display: flex; align-items: center; gap: .4rem;
+            margin-bottom: .4rem;
+            text-shadow: 0 0 20px rgba(212,168,81,0.4);
+            flex-shrink: 0;
+        }
+        .card-title .material-symbols-outlined {
+            font-size: 1.2rem;
+            font-variation-settings: 'FILL' 1;
+            color: var(--gold);
+            animation: pulse 2.5s ease-in-out infinite;
+        }
+        .card-hint {
+            font-family: 'Amiri', serif;
+            font-size: 1rem;
+            color: rgba(255,220,200,0.7);
+            background: rgba(212,168,81,0.1);
+            border: 1px solid rgba(212,168,81,0.2);
+            padding: .3rem 1.2rem;
+            border-radius: 100px;
+            direction: rtl;
+            flex-shrink: 0;
+        }
+
+        /* Card back elements */
+        .back-ornament {
+            position: absolute;
+            font-size: 4rem;
+            opacity: 0.07;
+            font-family: 'Aref Ruqaa', serif;
+            color: var(--gold);
+            pointer-events: none;
+            z-index: 0;
+        }
+        .back-ornament.tl { top: 1.5rem; left: 1.5rem; }
+        .back-ornament.br { bottom: 1.5rem; right: 1.5rem; }
+
+        .back-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            color: var(--gold-light);
+            margin-bottom: 1rem;
+            text-shadow: 0 0 30px rgba(212,168,81,0.5);
+            font-style: italic;
+            position: relative; z-index: 1;
+        }
+        .back-divider {
+            width: 60px; height: 1px;
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+            margin: 0 auto .8rem;
+            position: relative; z-index: 1;
+        }
+        .back-poem {
+            font-family: 'Amiri', serif;
+            font-size: 1.25rem;
+            line-height: 2;
+            color: rgba(255, 235, 220, 0.95);
+            direction: rtl;
+            padding: .8rem 1rem;
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 1px 10px rgba(0,0,0,0.5);
+        }
+        .back-poem::before, .back-poem::after {
+            content: '';
+            display: block;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(212,168,81,0.3), transparent);
+            margin: .4rem 0;
+        }
+
+        /* Controls */
+        .controls {
+            display: flex; gap: 4rem; justify-content: center;
+            margin-top: 1.5rem;
+            position: relative; z-index: 40;
+            flex-shrink: 0;
+        }
+        .ctrl-btn {
+            width: 60px; height: 60px;
+            background: var(--glass-gold);
+            border: 1px solid var(--glass-border);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--gold-light);
+            transition: all .3s;
+            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+            cursor: pointer;
+        }
+        .ctrl-btn:hover { background: rgba(212,168,81,0.2); transform: scale(1.15); box-shadow: 0 0 30px var(--gold-dim); }
+        .ctrl-btn .material-symbols-outlined { font-size: 1.8rem; font-variation-settings: 'FILL' 0; }
+
+        /* Position dots */
+        .dots {
+            display: flex; gap: .5rem; justify-content: center;
+            margin-top: 1rem;
+            flex-shrink: 0;
+        }
+        .dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: rgba(212,168,81,0.3);
+            transition: all .3s;
+        }
+        .dot.active { background: var(--gold); box-shadow: 0 0 10px var(--gold); width: 18px; border-radius: 3px; }
+
+        /* Audio btn */
+        #audio-btn { transition: all .3s; }
+        #audio-btn.playing { background: rgba(212,168,81,0.2); box-shadow: 0 0 20px var(--gold-dim); }
+        #audio-btn.playing .material-symbols-outlined { color: var(--gold-light); }
+
+        /* ── Responsive: Only font/gap tweaks, scaling handled by JS ── */
+        @media (max-width: 480px) {
+            .controls { gap: 2rem; }
+            .ctrl-btn { width: 50px; height: 50px; }
+            .ctrl-btn .material-symbols-outlined { font-size: 1.5rem; }
+            .back-poem { font-size: 1.05rem; line-height: 1.6; }
+            .back-title { font-size: 1.5rem; }
+            .card-title { font-size: 1.3rem; }
+            .hero-hint p { padding: .5rem 1.5rem; font-size: 0.9rem; }
+            header { padding-left: max(1rem, env(safe-area-inset-left)); padding-right: max(1rem, env(safe-area-inset-right)); }
+        }
+        @media (max-height: 500px) and (orientation: landscape) {
+            .hero-hint { display: none; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .scene, .carousel, .flip-card, .aurora-layer, #petals { animation: none !important; transition: none !important; }
+        }
+
+        a:focus, button:focus, .ctrl-btn:focus, .header-btn:focus { outline: 3px solid rgba(236,72,153,0.25); outline-offset: 4px; }
+        img, video { max-width: 100%; height: auto; display: block; }
+
+        /* Lightbox */
+        #lightbox-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 99998; }
+        #lightbox-overlay.active { display: flex; }
+        #lightbox-overlay img { max-width: 95%; max-height: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.6); border-radius: 8px; }
+        #lightbox-overlay .lb-close, #lightbox-overlay .lb-prev, #lightbox-overlay .lb-next { position: absolute; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.06); color: var(--gold-light); padding: .6rem; border-radius: 50%; cursor: pointer; }
+        #lightbox-overlay .lb-close { top: 16px; right: 16px; }
+        #lightbox-overlay .lb-prev { left: 16px; top: 50%; transform: translateY(-50%); }
+        #lightbox-overlay .lb-next { right: 16px; top: 50%; transform: translateY(-50%); }
+    </style>
+</head>
+<body>
+    <div id="page-transition-overlay" style="position:fixed; inset:0; background: #fff; box-shadow: inset 0 0 100px #ec4899; z-index:99999; pointer-events:none; transition: opacity 1.5s ease-out, transform 1.5s cubic-bezier(0.7, 0, 0.1, 1);"></div>
+
+    <audio id="bg-music" autoplay playsinline loop preload="auto">
+        <source src="02_-_Waadtak.mp3" type="audio/mpeg">
+    </audio>
+
+    <canvas id="bg-canvas"></canvas>
+    <div class="aurora">
+        <div class="aurora-layer a1"></div>
+        <div class="aurora-layer a2"></div>
+        <div class="aurora-layer a3"></div>
+    </div>
+    <canvas id="petals"></canvas>
+
+    <!-- HEADER: now a flex child, not position:fixed -->
+    <header>
+        <div class="logo">
+            Mariam's Room
+            <span class="material-symbols-outlined">local_florist</span>
+        </div>
+        <div style="display:flex;gap:.7rem;align-items:center;">
+            <button class="header-btn" id="audio-btn" onclick="toggleAudio()" aria-label="تشغيل/إيقاف الموسيقى">
+                <span class="material-symbols-outlined" id="audio-icon">music_off</span>
+            </button>
+            <a href="index.html" class="header-btn" id="home-btn" aria-label="الرئيسية">
+                <span class="material-symbols-outlined">home</span>
+            </a>
+        </div>
+    </header>
+
+    <!-- SCROLL CONTAINER: flex:1 child of body -->
+    <div class="page-scroll" id="page-scroll">
+        <div class="content-wrapper">
+            <div class="hero-hint" id="hero-hint" style="opacity:0;">
+                <div class="avatar">
+                    <img src="mariam3.jpg" loading="lazy" decoding="async" alt="صورة مريم"
+                         onerror="this.style.background='linear-gradient(135deg,#8b0a2a,#d4a851)';this.style.opacity='.5'"/>
+                </div>
+                <p>اسحبي بأصبعك لتحريك الصور.. ثم انقري 🌸
+                    <span class="material-symbols-outlined" style="position:absolute;top:-12px;right:-12px;color:var(--gold-light);animation:pulse 2s infinite;text-shadow:0 0 10px var(--gold);">auto_awesome</span>
+                </p>
+            </div>
+
+            <!-- 3D Carousel -->
+            <div class="scene" id="carousel-scene">
+                <div class="carousel" id="carousel-spinner">
+
+                    <div class="flip-card" data-card="0">
+                        <div class="flip-card-inner">
+                            <div class="card-front">
+                                <div class="photo-wrap">
+                                    <span class="placeholder">١</span>
+                                    <img src="mariam1.jpg" draggable="false" loading="lazy" decoding="async" alt="صورة مريم ١" onerror="this.style.opacity='0'"/>
+                                </div>
+                                <p class="card-title">أثير الذكريات <span class="material-symbols-outlined">favorite</span></p>
+                                <p class="card-hint">الوجه الآخر 🌹</p>
+                            </div>
+                            <div class="card-back">
+                                <span class="back-ornament tl">✦</span>
+                                <span class="back-ornament br">✦</span>
+                                <p class="back-title">نبضات قلب</p>
+                                <div class="back-divider"></div>
+                                <p class="back-poem">" في كل لحظة معكِ، يُزهر الربيع وتشرق الحياة من جديد.. "</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flip-card" data-card="1">
+                        <div class="flip-card-inner">
+                            <div class="card-front">
+                                <div class="photo-wrap">
+                                    <span class="placeholder">٢</span>
+                                    <img src="mariam2.jpg" draggable="false" loading="lazy" decoding="async" alt="صورة مريم ٢" onerror="this.style.opacity='0'"/>
+                                </div>
+                                <p class="card-title">نبض اللحظات <span class="material-symbols-outlined">flare</span></p>
+                                <p class="card-hint">الوجه الآخر 🌹</p>
+                            </div>
+                            <div class="card-back">
+                                <span class="back-ornament tl">❋</span>
+                                <span class="back-ornament br">❋</span>
+                                <p class="back-title">شمسٌ ودفء</p>
+                                <div class="back-divider"></div>
+                                <p class="back-poem">" ابتسامتكِ الدافئة هي إشراقة الصباح، وصوتكِ لحني المفضل.. "</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flip-card" data-card="2">
+                        <div class="flip-card-inner">
+                            <div class="card-front">
+                                <div class="photo-wrap">
+                                    <span class="placeholder">٣</span>
+                                    <img src="mariam3.jpg" draggable="false" loading="lazy" decoding="async" alt="صورة مريم ٣" onerror="this.style.opacity='0'"/>
+                                </div>
+                                <p class="card-title">سحرٌ لا ينتهي <span class="material-symbols-outlined">stars</span></p>
+                                <p class="card-hint">الوجه الآخر 🌹</p>
+                            </div>
+                            <div class="card-back">
+                                <span class="back-ornament tl">✶</span>
+                                <span class="back-ornament br">✶</span>
+                                <p class="back-title">سحرٌ وخيال</p>
+                                <div class="back-divider"></div>
+                                <p class="back-poem">" كالقمر في وسط العتمة تتلألأين، تأسرين العيون بسحرك الأزليّ.. "</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flip-card" data-card="3">
+                        <div class="flip-card-inner">
+                            <div class="card-front">
+                                <div class="photo-wrap">
+                                    <span class="placeholder">٤</span>
+                                    <img src="mariam4.jpg" draggable="false" loading="lazy" decoding="async" alt="صورة مريم ٤" onerror="this.style.opacity='0'"/>
+                                </div>
+                                <p class="card-title">عطر الأيام <span class="material-symbols-outlined">local_florist</span></p>
+                                <p class="card-hint">الوجه الآخر 🌹</p>
+                            </div>
+                            <div class="card-back">
+                                <span class="back-ornament tl">✿</span>
+                                <span class="back-ornament br">✿</span>
+                                <p class="back-title">حضورٌ آسر</p>
+                                <div class="back-divider"></div>
+                                <p class="back-poem">" لا شيء يُضاهي جمال حضورك، كعطرٍ يُغمر المكان بالسعادة.. "</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flip-card" data-card="4">
+                        <div class="flip-card-inner">
+                            <div class="card-front">
+                                <div class="photo-wrap">
+                                    <span class="placeholder">٥</span>
+                                    <img src="mariam5.jpg" draggable="false" loading="lazy" decoding="async" alt="صورة مريم ٥" onerror="this.style.opacity='0'"/>
+                                </div>
+                                <p class="card-title">لحن الروح <span class="material-symbols-outlined">music_note</span></p>
+                                <p class="card-hint">الوجه الآخر 🌹</p>
+                            </div>
+                            <div class="card-back">
+                                <span class="back-ornament tl">♫</span>
+                                <span class="back-ornament br">♪</span>
+                                <p class="back-title">أجمل قصيدة</p>
+                                <div class="back-divider"></div>
+                                <p class="back-poem">" أنتِ القصيدة التي لم تُكتب، واللحن العذب الذي يُطرب القلب.. "</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flip-card" data-card="5">
+                        <div class="flip-card-inner">
+                            <div class="card-front">
+                                <div class="photo-wrap">
+                                    <span class="placeholder">٦</span>
+                                    <img src="mariam6.jpg" draggable="false" loading="lazy" decoding="async" alt="صورة مريم ٦" onerror="this.style.opacity='0'"/>
+                                </div>
+                                <p class="card-title">همس النجوم <span class="material-symbols-outlined">bedtime</span></p>
+                                <p class="card-hint">الوجه الآخر 🌹</p>
+                            </div>
+                            <div class="card-back">
+                                <span class="back-ornament tl">★</span>
+                                <span class="back-ornament br">☽</span>
+                                <p class="back-title">بريق السماء</p>
+                                <div class="back-divider"></div>
+                                <p class="back-poem">" لو كانت النجوم تتكلم، لتحدثت عن بريقكِ وسحركِ الذي يخطف الأبصار.. "</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div><!-- /carousel-spinner -->
+            </div><!-- /scene -->
+
+            <!-- Dots -->
+            <div class="dots" id="dots-row">
+                <div class="dot active"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+            </div>
+
+            <!-- Controls -->
+            <div class="controls">
+                <button class="ctrl-btn" onclick="rotateLeft()" aria-label="التالي">
+                    <span class="material-symbols-outlined">arrow_forward</span>
+                </button>
+                <button class="ctrl-btn" onclick="rotateRight()" aria-label="السابق">
+                    <span class="material-symbols-outlined">arrow_back</span>
+                </button>
+            </div>
+        </div><!-- /content-wrapper -->
+    </div><!-- /page-scroll -->
+
+    <!-- Lightbox -->
+    <div id="lightbox-overlay" role="dialog" aria-hidden="true" aria-label="توسيع الصورة">
+        <button class="lb-close" aria-label="إغلاق">✕</button>
+        <button class="lb-prev" aria-label="السابق">◀</button>
+        <img id="lightbox-img" src="" alt=""/>
+        <button class="lb-next" aria-label="التالي">▶</button>
+    </div>
+
+    <script>
+    /* ══════════════════════════════════════════════════════════════════════
+       FIX #11 — VIEWPORT HEIGHT: In Instagram/WebView the window.innerHeight
+       is unreliable on load. We wait for the first paint then measure real
+       available height. This is used only for the bg canvas, not layout.
+       ══════════════════════════════════════════════════════════════════════ */
+    function getVH() {
+        // Prefer visualViewport if available (more accurate in WebViews)
+        if (window.visualViewport) return window.visualViewport.height;
+        return window.innerHeight;
+    }
+    function getVW() {
+        if (window.visualViewport) return window.visualViewport.width;
+        return window.innerWidth;
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       FIX #12 — JS-BASED SCENE SCALING:
+       CSS custom properties in @keyframes don't work in WebView < Chrome 114.
+       Instead we compute the scale in JS, set it via inline transform, and
+       run the entrance animation purely through opacity + a JS transition.
+       ══════════════════════════════════════════════════════════════════════ */
+    const scene = document.getElementById('carousel-scene');
+    const carousel = document.getElementById('carousel-spinner');
+    const CARD_W = 300, CARD_H = 460, RADIUS = 480;
+
+    function computeScale() {
+        const vw = getVW();
+        const vh = getVH();
+        const headerH = document.querySelector('header').offsetHeight || 70;
+        const availH = vh - headerH - 160; // 160px for hint + dots + controls
+        const availW = vw - 32;            // 32px side padding
+
+        // Scale to fit the smaller dimension
+        const scaleW = Math.min(availW / CARD_W, 1);
+        const scaleH = Math.min(availH / CARD_H, 1);
+        let scale = Math.min(scaleW, scaleH);
+
+        // Clamp: never below 0.38 (too tiny), never above 1 (no upscaling)
+        scale = Math.max(0.38, Math.min(1, scale));
+
+        // Extra squeeze for landscape phones
+        if (window.innerWidth > window.innerHeight && vh < 500) {
+            scale = Math.min(scale, 0.42);
+        }
+        return scale;
+    }
+
+    let currentScale = 1;
+    function applyScale(animated) {
+        currentScale = computeScale();
+        scene.style.transition = animated ? 'transform 0.4s cubic-bezier(0.2,0.8,0.2,1)' : 'none';
+        scene.style.transform = `scale(${currentScale})`;
+        // Shrink the placeholder space so layout stays tight
+        scene.style.marginTop = `${(CARD_H * (currentScale - 1)) / 2}px`;
+        scene.style.marginBottom = `${(CARD_H * (currentScale - 1)) / 2}px`;
+    }
+
+    // Entrance animation via JS (avoids CSS var in keyframes bug)
+    function runEntrance() {
+        const targetScale = computeScale();
+        // Start state
+        scene.style.transition = 'none';
+        scene.style.transform = `scale(${targetScale * 2.4})`;
+        scene.style.opacity = '0';
+
+        document.getElementById('hero-hint').style.transition = 'none';
+        document.getElementById('hero-hint').style.opacity = '0';
+
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+            // Animate to final state
+            scene.style.transition = 'transform 1.4s cubic-bezier(0.2,0.8,0.2,1), opacity 1.2s ease-out';
+            scene.style.transform = `scale(${targetScale})`;
+            scene.style.opacity = '1';
+            scene.style.marginTop = `${(CARD_H * (targetScale - 1)) / 2}px`;
+            scene.style.marginBottom = `${(CARD_H * (targetScale - 1)) / 2}px`;
+            currentScale = targetScale;
+
+            document.getElementById('hero-hint').style.transition = 'opacity 1s ease-out 0.4s';
+            document.getElementById('hero-hint').style.opacity = '1';
+        }));
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       FIX #13 — RESIZE HANDLING: ResizeObserver is more reliable than
+       'resize' event in WebViews (especially when toolbar appears/disappears).
+       ══════════════════════════════════════════════════════════════════════ */
+    if (window.ResizeObserver) {
+        let resizeTimer;
+        new ResizeObserver(() => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => applyScale(true), 120);
+        }).observe(document.body);
+    } else {
+        window.addEventListener('resize', () => applyScale(true));
+    }
+    // Also listen to visualViewport for Instagram's browser chrome changes
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', () => applyScale(true));
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       STAR BACKGROUND CANVAS
+       ══════════════════════════════════════════════════════════════════════ */
+    const bgC = document.getElementById('bg-canvas');
+    const bgX = bgC.getContext('2d');
+    let stars = [];
+    function resizeBg() {
+        bgC.width = getVW(); bgC.height = getVH();
+        stars = Array.from({length: 90}, () => ({
+            x: Math.random() * bgC.width, y: Math.random() * bgC.height,
+            r: Math.random() * 1.5 + 0.5, o: Math.random() * 0.5 + 0.2,
+            spd: Math.random() * 0.25 + 0.04, gold: Math.random() > 0.55,
+            tw: Math.random() * Math.PI * 2
+        }));
+    }
+    resizeBg();
+    window.addEventListener('resize', resizeBg);
+    (function drawBg() {
+        bgX.clearRect(0, 0, bgC.width, bgC.height);
+        stars.forEach(s => {
+            s.tw += 0.018;
+            const o = s.o * (0.55 + 0.45 * Math.sin(s.tw));
+            bgX.fillStyle = s.gold ? `rgba(212,168,81,${o})` : `rgba(255,255,255,${o})`;
+            bgX.fillRect(s.x, s.y, s.r, s.r);
+            s.y -= s.spd;
+            if (s.y < 0) { s.y = bgC.height; s.x = Math.random() * bgC.width; }
+        });
+        requestAnimationFrame(drawBg);
+    })();
+
+    /* ══════════════════════════════════════════════════════════════════════
+       PETALS CANVAS
+       ══════════════════════════════════════════════════════════════════════ */
+    const pC = document.getElementById('petals');
+    const pX = pC.getContext('2d');
+    let petals = [];
+    function resizeP() { pC.width = getVW(); pC.height = getVH(); }
+    resizeP();
+    window.addEventListener('resize', resizeP);
+    setInterval(() => {
+        const g = Math.random() > 0.45;
+        petals.push({ x: Math.random() * pC.width, y: -20, sz: Math.random() * 7 + 3,
+            spd: Math.random() * 1.2 + 0.4, drift: (Math.random() - 0.5) * 0.7,
+            rot: Math.random() * Math.PI * 2, rs: (Math.random() - 0.5) * 0.06,
+            o: Math.random() * 0.45 + 0.25, gold: g, hue: g ? 35 : Math.random() * 25 + 330 });
+    }, 350);
+    (function drawP() {
+        pX.clearRect(0, 0, pC.width, pC.height);
+        petals = petals.filter(p => p.y < pC.height + 30);
+        petals.forEach(p => {
+            p.y += p.spd; p.x += p.drift; p.rot += p.rs;
+            pX.save(); pX.translate(p.x, p.y); pX.rotate(p.rot); pX.globalAlpha = p.o;
+            pX.beginPath(); pX.ellipse(0, 0, p.sz, p.sz * 1.9, 0, 0, Math.PI * 2);
+            pX.fillStyle = `hsla(${p.hue},65%,75%,1)`;
+            pX.fill(); pX.restore();
+        });
+        requestAnimationFrame(drawP);
+    })();
+
+    /* ══════════════════════════════════════════════════════════════════════
+       FIX #14 — CAROUSEL DRAG: Separated touch and mouse handling.
+       'touch-action: none' on .scene prevents the browser from intercepting
+       touch events for scrolling while dragging the carousel.
+       hasDragged threshold raised to 10px to reduce accidental flip-blocks.
+       ══════════════════════════════════════════════════════════════════════ */
+    let currentAngle = 0, startX = 0, isDragging = false, prevAngle = 0;
+    window.hasDragged = false;
+    const DRAG_THRESHOLD = 10;
+    const SENSITIVITY = 0.38;
+
+    function setCarousel(angle, instant) {
+        const t = `translateZ(-${RADIUS}px) rotateY(${angle}deg)`;
+        if (instant) {
+            carousel.style.transition = 'none';
+            carousel.style.webkitTransition = 'none';
+        } else {
+            const ease = 'transform .6s cubic-bezier(.25,.8,.25,1)';
+            carousel.style.transition = ease;
+            carousel.style.webkitTransition = '-webkit-' + ease;
+        }
+        carousel.style.webkitTransform = t;
+        carousel.style.transform = t;
+    }
+
+    // Mouse
+    scene.addEventListener('mousedown', e => {
+        isDragging = true; window.hasDragged = false;
+        startX = e.pageX; prevAngle = currentAngle;
+        carousel.style.transition = 'none';
+    });
+    window.addEventListener('mouseup', endDrag);
+    window.addEventListener('mousemove', e => {
+        if (!isDragging) return;
+        const d = e.pageX - startX;
+        if (Math.abs(d) > DRAG_THRESHOLD) window.hasDragged = true;
+        currentAngle = prevAngle + d * SENSITIVITY;
+        setCarousel(currentAngle, true);
+    });
+
+    // Touch — {passive:false} on touchstart so we can call preventDefault if needed
+    scene.addEventListener('touchstart', e => {
+        isDragging = true; window.hasDragged = false;
+        startX = e.touches[0].pageX; prevAngle = currentAngle;
+        carousel.style.transition = 'none';
+    }, { passive: true });
+    window.addEventListener('touchend', endDrag);
+    window.addEventListener('touchmove', e => {
+        if (!isDragging) return;
+        const d = e.touches[0].pageX - startX;
+        if (Math.abs(d) > DRAG_THRESHOLD) window.hasDragged = true;
+        currentAngle = prevAngle + d * SENSITIVITY;
+        setCarousel(currentAngle, true);
+    }, { passive: true });
+
+    function endDrag() {
+        if (!isDragging) return;
+        isDragging = false;
+        currentAngle = Math.round(currentAngle / 60) * 60;
+        setCarousel(currentAngle, false);
+        updateDots();
+        setTimeout(() => { window.hasDragged = false; }, 80);
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       FIX #15 — CARD FLIP: Delegated to scene, not individual cards.
+       This avoids issues where WebViews fire click after touchend even
+       when the user dragged. We check hasDragged centrally.
+       ══════════════════════════════════════════════════════════════════════ */
+    scene.addEventListener('click', function(e) {
+        if (window.hasDragged) return;
+        const card = e.target.closest('.flip-card');
+        if (!card) return;
+        card.classList.toggle('flipped');
+        updateDots();
+    });
+
+    function rotateLeft()  { currentAngle += 60; setCarousel(currentAngle, false); updateDots(); }
+    function rotateRight() { currentAngle -= 60; setCarousel(currentAngle, false); updateDots(); }
+
+    function updateDots() {
+        const dots = document.querySelectorAll('.dot');
+        const idx = (((-currentAngle % 360) + 360) % 360) / 60 | 0;
+        dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       AUDIO
+       ══════════════════════════════════════════════════════════════════════ */
+    const audio = document.getElementById('bg-music');
+    const audioBtn = document.getElementById('audio-btn');
+    const audioIcon = document.getElementById('audio-icon');
+    let isPlaying = false;
+
+    function toggleAudio() {
+        if (isPlaying) {
+            audio.pause();
+            audioIcon.textContent = 'music_off';
+            audioBtn.classList.remove('playing');
+        } else {
+            audio.play().then(() => {
+                audioIcon.textContent = 'music_note';
+                audioBtn.classList.add('playing');
+            }).catch(() => {});
+        }
+        isPlaying = !isPlaying;
+    }
+
+    // Smart autoplay
+    (function smartAutoplay() {
+        if (!audio) return;
+        audio.muted = false;
+        const p = audio.play();
+        if (p !== undefined) {
+            p.then(() => {
+                audio.muted = false;
+                isPlaying = true;
+                audioIcon.textContent = 'music_note';
+                audioBtn.classList.add('playing');
+            }).catch(() => {
+                audio.muted = true;
+                audio.play().catch(() => {});
+                const unmute = () => {
+                    audio.muted = false;
+                    audio.play().then(() => {
+                        isPlaying = true;
+                        audioIcon.textContent = 'music_note';
+                        audioBtn.classList.add('playing');
+                    }).catch(() => {});
+                    window.removeEventListener('click', unmute);
+                    window.removeEventListener('touchstart', unmute);
+                };
+                window.addEventListener('click', unmute, { passive: true });
+                window.addEventListener('touchstart', unmute, { passive: true });
+            });
+        }
+    })();
+
+    /* ══════════════════════════════════════════════════════════════════════
+       PAGE TRANSITIONS
+       ══════════════════════════════════════════════════════════════════════ */
+    window.addEventListener('load', () => {
+        const overlay = document.getElementById('page-transition-overlay');
+        if (overlay) {
+            overlay.style.background = 'radial-gradient(circle, #ec4899 0%, #1c0512 100%)';
+            setTimeout(() => {
+                overlay.style.opacity = '0';
+                overlay.style.transform = 'scale(6) rotate(45deg)';
+                setTimeout(() => overlay.remove(), 1600);
+            }, 50);
+        }
+        // Run entrance animation after DOM is ready
+        setTimeout(runEntrance, 100);
+    });
+
+    const homeBtn = document.getElementById('home-btn');
+    if (homeBtn) {
+        homeBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const dest = this.href;
+            scene.style.transition = 'transform 1s cubic-bezier(0.5,0,0.2,1), opacity 0.8s, filter 0.8s';
+            scene.style.transform = `scale(0.1) translateZ(-2000px) rotateY(720deg)`;
+            scene.style.filter = 'blur(10px) brightness(150%)';
+            scene.style.opacity = '0';
+            document.getElementById('page-scroll').style.transition = 'opacity 0.8s';
+            document.getElementById('page-scroll').style.opacity = '0';
+            const out = document.createElement('div');
+            out.style.cssText = 'position:fixed;inset:0;background:#1c0512;z-index:99999;opacity:0;transition:opacity 1s ease-in-out;';
+            document.body.appendChild(out);
+            requestAnimationFrame(() => out.style.opacity = '1');
+            setTimeout(() => window.location.href = dest, 900);
+        });
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       LIGHTBOX
+       ══════════════════════════════════════════════════════════════════════ */
+    (function() {
+        const overlay = document.getElementById('lightbox-overlay');
+        const lbImg = document.getElementById('lightbox-img');
+        const imgs = Array.from(document.querySelectorAll('.photo-wrap img'));
+        let idx = -1;
+
+        function open(i) {
+            const el = imgs[i]; if (!el) return;
+            idx = i;
+            lbImg.src = el.currentSrc || el.src;
+            lbImg.alt = el.alt || '';
+            overlay.classList.add('active');
+            overlay.setAttribute('aria-hidden', 'false');
+        }
+        function close() {
+            overlay.classList.remove('active');
+            overlay.setAttribute('aria-hidden', 'true');
+        }
+        function prev() { open((idx - 1 + imgs.length) % imgs.length); }
+        function next() { open((idx + 1) % imgs.length); }
+
+        imgs.forEach((img, i) => {
+            img.style.cursor = 'zoom-in';
+            img.setAttribute('tabindex', '0');
+            // Use pointerup to avoid interfering with carousel drag
+            img.addEventListener('pointerup', e => {
+                if (window.hasDragged) return;
+                e.stopPropagation();
+                open(i);
+            });
+            img.addEventListener('keydown', e => {
+                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(i); }
+            });
+        });
+
+        overlay.querySelector('.lb-close').addEventListener('click', close);
+        overlay.querySelector('.lb-prev').addEventListener('click', prev);
+        overlay.querySelector('.lb-next').addEventListener('click', next);
+        overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+        window.addEventListener('keydown', e => {
+            if (!overlay.classList.contains('active')) return;
+            if (e.key === 'Escape') close();
+            if (e.key === 'ArrowLeft') prev();
+            if (e.key === 'ArrowRight') next();
+        });
+    })();
+    </script>
+</body>
+</html>
